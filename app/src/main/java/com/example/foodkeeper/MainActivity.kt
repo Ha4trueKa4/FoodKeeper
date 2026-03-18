@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.rememberNavController
 import com.example.foodkeeper.presentation.navigation.FoodKeeperNavigation
+import com.example.foodkeeper.presentation.screens.MainScreen
 import com.example.foodkeeper.presentation.theme.FoodKeeperTheme
 
 class MainActivity : ComponentActivity() {
@@ -23,10 +24,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             FoodKeeperTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    FoodKeeperNavigation(
-                        modifier = Modifier.padding(innerPadding),
-                        navHostController = rememberNavController()
-                    )
+                    MainScreen(Modifier.padding(innerPadding))
                 }
             }
         }

@@ -31,9 +31,7 @@ fun FoodKeeperNavigation(
             }
         }
         composable<Routes.Main> {
-            MainScreen{ navigateTo ->
-                navHostController.navigate(navigateTo)
-            }
+            MainScreen()
         }
     }
 }
