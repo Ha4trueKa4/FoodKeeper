@@ -9,12 +9,6 @@ class FoodKeeperViewModel : ViewModel() {
     private val _products = MutableStateFlow<List<Product>>(listOf(
         Product(
             id = 1,
-            name = "Молоко Простоквашино",
-            expiryDate = "12.11.2008",
-            imageUrl = "https://google.com"
-        ),
-        Product(
-            id = 1,
             name = "Бананы",
             expiryDate = "30.11.2008",
             imageUrl = "https://google.com"
