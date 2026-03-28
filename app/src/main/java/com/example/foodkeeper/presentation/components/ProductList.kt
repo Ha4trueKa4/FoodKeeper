@@ -4,7 +4,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.example.foodkeeper.presentation.model.Product
+import com.example.foodkeeper.domain.Product
+
 
 @Composable
 fun ProductList(modifier: Modifier = Modifier, products: List<Product>, onDelete : (Product) -> Unit) {

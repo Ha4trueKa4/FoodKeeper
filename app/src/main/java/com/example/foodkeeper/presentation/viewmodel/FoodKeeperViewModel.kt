@@ -1,32 +1,40 @@
 package com.example.foodkeeper.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
-import com.example.foodkeeper.presentation.model.Product
+import androidx.lifecycle.viewModelScope
+import com.example.foodkeeper.domain.Product
+import com.example.foodkeeper.domain.usecases.AddProductUseCase
+import com.example.foodkeeper.domain.usecases.DeleteProductUseCase
+import com.example.foodkeeper.domain.usecases.GetProductsUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 
-class FoodKeeperViewModel : ViewModel() {
-    private val _products = MutableStateFlow<List<Product>>(listOf(
-        Product(
-            id = 1,
-            name = "Бананы",
-            expiryDate = "30.11.2008",
-            imageUrl = "https://google.com"
-        ),
-        Product(
-            id = 1,
-            name = "lorem ipsum alsfllf kalklall alkfka klfkqk fqk k",
-            expiryDate = "11.03.2007",
-            imageUrl = "https://google.com"
-        )
-    ))
+class FoodKeeperViewModel(
+    private val getProductsUseCase: GetProductsUseCase,
+    private val addProductsUseCase: AddProductUseCase,
+    private val deleteProductUseCase: DeleteProductUseCase
+) : ViewModel() {
+    private val _products = MutableStateFlow<List<Product>>(emptyList())
     val products : StateFlow<List<Product>> = _products
 
-    fun addProduct(product: Product) {
-        _products.value = _products.value + product
+    fun fetchProducts() {
+        viewModelScope.launch {
+            getProductsUseCase.execute().also { _products.value = it }
+        }
     }
 
-    fun deleteProduct(product: Product) {
-        _products.value = _products.value - product
+    fun addProduct(product: Product) {
+        viewModelScope.launch {
+            addProductsUseCase.execute(product)
+            fetchProducts()
+        }
+    }
+
+    fun deleteProduct(productId: Int) {
+        viewModelScope.launch {
+            deleteProductUseCase.execute(productId)
+            fetchProducts()
+        }
     }
 }

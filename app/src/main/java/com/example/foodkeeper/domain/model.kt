@@ -1,4 +1,4 @@
-package com.example.foodkeeper.presentation.model
+package com.example.foodkeeper.domain
 
 data class Product(
     val id: Int,

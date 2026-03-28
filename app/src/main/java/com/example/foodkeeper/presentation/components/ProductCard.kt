@@ -29,7 +29,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.foodkeeper.R
-import com.example.foodkeeper.presentation.model.Product
+import com.example.foodkeeper.domain.Product
+
 import com.example.foodkeeper.presentation.theme.Dimens
 
 
