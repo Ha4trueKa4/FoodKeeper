@@ -5,6 +5,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.example.foodkeeper.presentation.screens.AddProductScreen
 
 import com.example.foodkeeper.presentation.screens.LoginScreen
 import com.example.foodkeeper.presentation.screens.MainScreen
@@ -18,18 +19,13 @@ fun FoodKeeperNavigation(
 ) {
     NavHost(
         navController = navHostController,
-        startDestination = Routes.Login
+        startDestination = Routes.Main
     ) {
-        composable<Routes.Login> {
-            LoginScreen { navigateTo ->
-                navHostController.navigate(navigateTo)
-            }
+
+        composable<Routes.Add> {
+            AddProductScreen { }
         }
-        composable<Routes.Register> {
-            RegisterScreen{ navigateTo ->
-                navHostController.navigate(navigateTo)
-            }
-        }
+
         composable<Routes.Main> {
             MainScreen()
         }
