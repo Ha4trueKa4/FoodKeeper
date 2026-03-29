@@ -2,8 +2,6 @@ package com.example.foodkeeper.presentation.components
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,8 +13,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,22 +24,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.layout.ModifierLocalBeyondBoundsLayout
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.max
-import androidx.compose.ui.unit.sp
 import com.example.foodkeeper.R
-import com.example.foodkeeper.presentation.model.Product
+import com.example.foodkeeper.domain.Product
+
 import com.example.foodkeeper.presentation.theme.Dimens
 
 
 @Composable
-fun ProductCard(product : Product, modifier: Modifier = Modifier) {
+fun ProductCard(product : Product, modifier: Modifier = Modifier, onDelete : (Product) -> Unit) {
     val daysLeft = 10
     val statusColor = Color.Green
 
@@ -67,7 +62,9 @@ fun ProductCard(product : Product, modifier: Modifier = Modifier) {
         )
 
         Column(
-            modifier = Modifier.weight(1f).fillMaxHeight()
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight()
         ) {
             Text(
                 text = product.name,
@@ -89,21 +86,12 @@ fun ProductCard(product : Product, modifier: Modifier = Modifier) {
                     modifier = Modifier.padding(top = Dimens.PaddingSmall)
                 )
             }
+        }
 
-
+        IconButton(
+            onClick = { onDelete(product) }
+        ) {
+            Icon(Icons.Default.Delete, contentDescription = null)
         }
     }
-}
-
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun ProductCardPreview() {
-    ProductCard(
-        product = Product(
-            id = 1,
-            name = "Молоко Простоквашино asd asd af asfasf af as fasfaaaaaaaaaa afa sgdgdsggdsgdsgsd  asdasd ad a",
-            expiryDate = "12.11.2008",
-            imageUrl = "https://google.com"
-        )
-    )
 }
