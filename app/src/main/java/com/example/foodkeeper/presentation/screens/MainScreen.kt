@@ -6,31 +6,26 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.foodkeeper.domain.Product
+import androidx.navigation.NavController
 import com.example.foodkeeper.presentation.components.AddProductFloatingActionButton
 import com.example.foodkeeper.presentation.components.ProductList
+import com.example.foodkeeper.presentation.navigation.Routes
 import com.example.foodkeeper.presentation.viewmodel.FoodKeeperViewModel
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun MainScreen(
     modifier: Modifier = Modifier,
-    viewModel: FoodKeeperViewModel = koinViewModel()) {
+    viewModel: FoodKeeperViewModel = koinViewModel(),
+    navHostController: NavController
+) {
     viewModel.fetchProducts()
     val products by viewModel.products.collectAsState()
 
     Scaffold(
         floatingActionButton = {
             AddProductFloatingActionButton {
-                viewModel.addProduct(
-                    Product(
-                        id = 0,
-                        name = "Новый продукт",
-                        expiryDate = "01.01.2026",
-                        imageUrl = ""
-                    )
-                )
+                navHostController.navigate(Routes.Add)
             }
         }
     ) { innerPadding ->

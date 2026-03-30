@@ -2,14 +2,12 @@ package com.example.foodkeeper.presentation.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.Lifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.foodkeeper.presentation.screens.AddProductScreen
-
-import com.example.foodkeeper.presentation.screens.LoginScreen
 import com.example.foodkeeper.presentation.screens.MainScreen
-import com.example.foodkeeper.presentation.screens.RegisterScreen
 
 
 @Composable
@@ -23,11 +21,15 @@ fun FoodKeeperNavigation(
     ) {
 
         composable<Routes.Add> {
-            AddProductScreen { }
+            AddProductScreen {
+                val navBackStackEntry = navHostController.currentBackStackEntry
+                if (navBackStackEntry?.lifecycle?.currentState == Lifecycle.State.RESUMED) {
+                    navHostController.popBackStack()
+                }
+            }
         }
-
         composable<Routes.Main> {
-            MainScreen()
+            MainScreen(navHostController = navHostController)
         }
     }
 }

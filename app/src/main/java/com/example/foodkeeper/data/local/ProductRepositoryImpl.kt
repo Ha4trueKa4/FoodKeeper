@@ -9,7 +9,7 @@ import com.example.foodkeeper.domain.repository.ProductRepository
 class ProductRepositoryImpl(private val productDao: ProductDao) : ProductRepository {
     override suspend fun getAllProducts(): List<Product> {
         return productDao.getAllProducts().map {
-            Product(id = it.id, name = it.name, expiryDate = it.expiryDate, imageUrl = it.imageUrl)
+            Product(id = it.id, name = it.name, expiryDate = it.expiryDate , imageUrl = it.imageUrl)
         }
     }
 
