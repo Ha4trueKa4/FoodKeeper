@@ -6,8 +6,11 @@ import com.example.foodkeeper.domain.Product
 import com.example.foodkeeper.domain.usecases.AddProductUseCase
 import com.example.foodkeeper.domain.usecases.DeleteProductUseCase
 import com.example.foodkeeper.domain.usecases.GetProductsUseCase
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class FoodKeeperViewModel(
@@ -15,26 +18,28 @@ class FoodKeeperViewModel(
     private val addProductsUseCase: AddProductUseCase,
     private val deleteProductUseCase: DeleteProductUseCase
 ) : ViewModel() {
-    private val _products = MutableStateFlow<List<Product>>(emptyList())
-    val products : StateFlow<List<Product>> = _products
+    val products : StateFlow<List<Product>> = getProductsUseCase.execute()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
 
-    fun fetchProducts() {
-        viewModelScope.launch {
-            getProductsUseCase.execute().also { _products.value = it }
+    fun addProductAndAwait(product: Product): Job {
+        return viewModelScope.launch {
+            addProductsUseCase.execute(product)
         }
     }
 
     fun addProduct(product: Product) {
         viewModelScope.launch {
             addProductsUseCase.execute(product)
-            fetchProducts()
         }
     }
 
     fun deleteProduct(productId: Int) {
         viewModelScope.launch {
             deleteProductUseCase.execute(productId)
-            fetchProducts()
         }
     }
 }

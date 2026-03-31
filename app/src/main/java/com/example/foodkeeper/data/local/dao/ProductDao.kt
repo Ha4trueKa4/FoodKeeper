@@ -12,7 +12,7 @@ interface ProductDao {
     suspend fun insert(product : ProductEntity)
 
     @Query("SELECT * FROM products")
-    suspend fun getAllProducts() : List<ProductEntity>
+    fun getAllProducts() : Flow<List<ProductEntity>>
 
     @Query("DELETE FROM products WHERE id = :productId")
     suspend fun deleteProduct(productId: Int)

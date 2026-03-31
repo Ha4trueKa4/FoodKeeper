@@ -60,7 +60,7 @@ fun AddProductScreen(
         )
 
         coroutineScope.launch {
-            viewModel.addProduct(product)
+            viewModel.addProductAndAwait(product)
             onNavigateBack()
         }
 
