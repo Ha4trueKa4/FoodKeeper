@@ -7,7 +7,9 @@ import com.example.foodkeeper.data.local.ProductRepositoryImpl
 import com.example.foodkeeper.domain.repository.ProductRepository
 import com.example.foodkeeper.domain.usecases.AddProductUseCase
 import com.example.foodkeeper.domain.usecases.DeleteProductUseCase
+import com.example.foodkeeper.domain.usecases.GetProductByIdUseCase
 import com.example.foodkeeper.domain.usecases.GetProductsUseCase
+import com.example.foodkeeper.domain.usecases.UpdateProductUseCase
 import com.example.foodkeeper.presentation.viewmodel.FoodKeeperViewModel
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
@@ -16,6 +18,8 @@ import org.koin.dsl.module
 val viewModelModule = module {
     viewModel {
         FoodKeeperViewModel(
+            get(),
+            get(),
             get(),
             get(),
             get()
@@ -44,5 +48,11 @@ val useCaseModule = module {
     }
     single {
         DeleteProductUseCase(get())
+    }
+    single {
+        UpdateProductUseCase(get())
+    }
+    single {
+        GetProductByIdUseCase(get())
     }
 }

@@ -2,6 +2,7 @@ package com.example.foodkeeper.presentation.components
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -35,7 +36,12 @@ import com.example.foodkeeper.presentation.theme.Dimens
 
 
 @Composable
-fun ProductCard(product : Product, modifier: Modifier = Modifier, onDelete : (Product) -> Unit) {
+fun ProductCard(
+    product : Product,
+    modifier: Modifier = Modifier,
+    onDelete : (Int) -> Unit,
+    onEdit : (Int) -> Unit
+) {
     val daysLeft = 10
     val statusColor = Color.Green
 
@@ -47,8 +53,9 @@ fun ProductCard(product : Product, modifier: Modifier = Modifier, onDelete : (Pr
             .shadow(6.dp, RoundedCornerShape(20.dp))
             .clip(RoundedCornerShape(20.dp))
             .background(Color.White)
-            .padding(Dimens.PaddingMedium),
-        verticalAlignment = Alignment.CenterVertically
+            .padding(Dimens.PaddingMedium)
+            .clickable(onClick = { onEdit(product.id)}),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Image(
             painter = painterResource(id = R.drawable.milk),
@@ -89,7 +96,7 @@ fun ProductCard(product : Product, modifier: Modifier = Modifier, onDelete : (Pr
         }
 
         IconButton(
-            onClick = { onDelete(product) }
+            onClick = { onDelete(product.id) }
         ) {
             Icon(Icons.Default.Delete, contentDescription = null)
         }

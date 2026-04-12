@@ -19,21 +19,28 @@ import org.koin.androidx.compose.koinViewModel
 fun MainScreen(
     modifier: Modifier = Modifier,
     viewModel: FoodKeeperViewModel = koinViewModel(),
-    navHostController: NavController
+    onEdit : (Int) -> Unit,
+    onAdd : () -> Unit
 ) {
-    val backStackEntry by navHostController.currentBackStackEntryAsState()
     val products by viewModel.products.collectAsState()
 
     Scaffold(
         floatingActionButton = {
             AddProductFloatingActionButton {
-                navHostController.navigate(Routes.Add)
+                onAdd()
             }
         }
     ) { innerPadding ->
-        ProductList(modifier = Modifier.padding(innerPadding), products = products, onDelete = {
-            viewModel.deleteProduct(it.id)
-        })
+        ProductList(
+            modifier = Modifier.padding(innerPadding),
+            products = products,
+            onDelete = { productId ->
+                viewModel.deleteProduct(productId)
+            },
+            onEdit = { productId->
+                onEdit(productId)
+            }
+        )
     }
 }
 

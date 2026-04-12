@@ -6,7 +6,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.example.foodkeeper.presentation.screens.AddProductScreen
+import androidx.navigation.toRoute
+import com.example.foodkeeper.presentation.screens.AddEditProductScreen
 import com.example.foodkeeper.presentation.screens.MainScreen
 
 
@@ -21,7 +22,9 @@ fun FoodKeeperNavigation(
     ) {
 
         composable<Routes.Add> {
-            AddProductScreen {
+            AddEditProductScreen(
+                productId = null
+            ) {
                 val navBackStackEntry = navHostController.currentBackStackEntry
                 if (navBackStackEntry?.lifecycle?.currentState == Lifecycle.State.RESUMED) {
                     navHostController.popBackStack()
@@ -29,7 +32,26 @@ fun FoodKeeperNavigation(
             }
         }
         composable<Routes.Main> {
-            MainScreen(navHostController = navHostController)
+            MainScreen(
+                onAdd = {
+                    navHostController.navigate(Routes.Add)
+                },
+                onEdit = { productId ->
+                    navHostController.navigate(Routes.Edit(productId))
+                }
+            )
+        }
+
+        composable<Routes.Edit> { backStackEntry ->
+            val route = backStackEntry.toRoute<Routes.Edit>()
+            AddEditProductScreen(
+                productId = route.productId
+            ) {
+                val navBackStackEntry = navHostController.currentBackStackEntry
+                if (navBackStackEntry?.lifecycle?.currentState == Lifecycle.State.RESUMED) {
+                    navHostController.popBackStack()
+                }
+            }
         }
     }
 }

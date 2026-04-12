@@ -7,4 +7,8 @@ sealed class Routes {
     data object Add : Routes()
     @Serializable
     data object Main : Routes()
+
+    @Serializable
+    data class Edit(val productId : Int) : Routes()
+
 }

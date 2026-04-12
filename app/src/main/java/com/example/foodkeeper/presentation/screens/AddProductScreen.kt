@@ -16,6 +16,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
@@ -31,14 +32,31 @@ import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddProductScreen(
+fun AddEditProductScreen(
     modifier: Modifier = Modifier,
     viewModel: FoodKeeperViewModel = koinViewModel(),
-    onNavigateBack : () -> Unit
+    productId : Int?,
+    onNavigateBack : () -> Unit,
 ) {
+
+    val isEditMode = productId != null
+
     var name by rememberSaveable { mutableStateOf("") }
     var expiryDate by rememberSaveable { mutableStateOf<Long?>(null) }
     var errorMessage by rememberSaveable { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(productId) {
+        if (productId != null) {
+            val product = viewModel.getProductById(productId)
+            if (product != null) {
+                name = product.name
+                expiryDate = product.expiryDate
+            }
+        }
+    }
+
+
+
     val coroutineScope = rememberCoroutineScope()
 
     fun onSubmit() {
@@ -53,14 +71,18 @@ fun AddProductScreen(
             return
         }
         val product = Product(
-            id =0,
+            id = productId ?: 0,
             name =trimmedName,
             expiryDate= expiryDate!!,
             imageUrl = ""
         )
 
         coroutineScope.launch {
-            viewModel.addProductAndAwait(product)
+            if (isEditMode) {
+                viewModel.updateProduct(product)
+            } else {
+                viewModel.addProductAndAwait(product)
+            }
             onNavigateBack()
         }
 
@@ -70,7 +92,9 @@ fun AddProductScreen(
         modifier = modifier,
         topBar = {
             TopAppBar(
-                title = { Text("Добавить продукт") },
+                title = { Text(
+                    if (productId != null) "Редактировать продкут" else "Добавить продукт"
+                ) },
                 navigationIcon = { IconButton(
                     onClick = onNavigateBack
                 ) {
@@ -93,7 +117,9 @@ fun AddProductScreen(
                 singleLine = true
             )
 
-            ExpiryDatePicker { millis -> expiryDate = millis }
+            ExpiryDatePicker(
+                selectedDateMillis = expiryDate
+            ) { millis -> expiryDate = millis }
 
             expiryDate?.let {
                 Text("$it")
@@ -108,7 +134,10 @@ fun AddProductScreen(
                 modifier = Modifier.fillMaxWidth(),
                 enabled = name.trim().isNotEmpty() && expiryDate != null
             ) {
-                Text("Сохранить")
+                Text(
+                    if (isEditMode) "Сохранить изменения"
+                    else "Сохранить"
+                )
             }
         }
     }

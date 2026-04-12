@@ -13,17 +13,29 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExpiryDatePicker(
     modifier: Modifier = Modifier,
-    onDatePick: (Long) -> Unit
+    selectedDateMillis : Long?,
+    onDatePick: (Long) -> Unit,
+
 ) {
-    val datePickerState = rememberDatePickerState()
     var showDatePicker by remember { mutableStateOf(false) }
 
-    Button(onClick = {showDatePicker = true}) { Text("Выбрать дату") }
+    val datePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = selectedDateMillis
+    )
+
+    val formattedDate = selectedDateMillis?.let {
+        SimpleDateFormat("dd.MM.yyyy", Locale.getDefault()).format(Date(it))
+    } ?: "Выбрать дату"
+
+    Button(onClick = {showDatePicker = true}) { Text(formattedDate) }
 
     if (showDatePicker) {
         DatePickerDialog(
@@ -33,8 +45,9 @@ fun ExpiryDatePicker(
                     onClick = {
                         datePickerState.selectedDateMillis?.let { millis ->
                             onDatePick(millis)
-                            showDatePicker=false
+
                         }
+                        showDatePicker=false
                     }
                 ) {
                     Text("Ок")

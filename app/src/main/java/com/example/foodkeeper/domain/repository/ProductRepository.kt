@@ -9,4 +9,8 @@ interface ProductRepository {
     fun getAllProducts(): Flow<List<Product>>
     suspend fun addProduct(product: Product)
     suspend fun deleteProduct(productId: Int)
+
+    suspend fun getProductById(productId: Int) : Product?
+
+    suspend fun updateProduct(product: Product)
 }
