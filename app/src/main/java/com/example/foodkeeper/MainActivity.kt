@@ -4,6 +4,8 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.navigation.compose.rememberNavController
+import com.example.foodkeeper.presentation.navigation.FoodKeeperNavigation
 import com.example.foodkeeper.presentation.screens.MainScreen
 import com.example.foodkeeper.presentation.theme.FoodKeeperTheme
 
@@ -13,7 +15,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             FoodKeeperTheme {
-                MainScreen()
+                FoodKeeperNavigation(navHostController = rememberNavController(),)
             }
         }
     }

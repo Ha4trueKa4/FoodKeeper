@@ -8,12 +8,17 @@ import com.example.foodkeeper.domain.Product
 
 
 @Composable
-fun ProductList(modifier: Modifier = Modifier, products: List<Product>, onDelete : (Product) -> Unit) {
+fun ProductList(
+    modifier: Modifier = Modifier,
+    products: List<Product>,
+    onDelete : (Int) -> Unit,
+    onEdit : (Int) -> Unit,
+) {
     LazyColumn(
         modifier = modifier
     ) {
         items(products) {
-            product -> ProductCard(product, onDelete = onDelete)
+            product -> ProductCard(product, onDelete = onDelete, onEdit = onEdit)
         }
     }
 }
