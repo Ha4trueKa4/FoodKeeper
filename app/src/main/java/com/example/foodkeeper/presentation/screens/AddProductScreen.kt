@@ -1,13 +1,15 @@
 package com.example.foodkeeper.presentation.screens
-
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -33,14 +35,15 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.foodkeeper.domain.Product
 import com.example.foodkeeper.presentation.components.ExpiryDatePicker
+import com.example.foodkeeper.presentation.components.ImagePickerButton
 import com.example.foodkeeper.presentation.viewmodel.FoodKeeperViewModel
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
@@ -59,6 +62,8 @@ fun AddEditProductScreen(
     val isEditMode = productId != null
     var name by rememberSaveable { mutableStateOf("") }
     var expiryDate by rememberSaveable { mutableStateOf<Long?>(null) }
+    var imageUri by rememberSaveable { mutableStateOf<Uri?>(null) }
+
     var errorMessage by rememberSaveable { mutableStateOf<String?>(null) }
 
     LaunchedEffect(productId) {
@@ -67,6 +72,9 @@ fun AddEditProductScreen(
             if (product != null) {
                 name = product.name
                 expiryDate = product.expiryDate
+                if (product.imageUrl.isNotBlank()) {
+                    imageUri = Uri.parse(product.imageUrl)
+                }
             }
         }
     }
@@ -87,7 +95,7 @@ fun AddEditProductScreen(
             id = productId ?: 0,
             name = trimmedName,
             expiryDate = expiryDate!!,
-            imageUrl = ""
+            imageUrl = imageUri?.toString() ?: ""
         )
         coroutineScope.launch {
             if (isEditMode) {
@@ -132,6 +140,14 @@ fun AddEditProductScreen(
                 .padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            ImagePickerButton(
+                selectedImageUri = imageUri,
+                onImageSelected = { uri ->
+                    imageUri = uri
+                    if (errorMessage != null) errorMessage = null
+                }
+            )
+
             OutlinedTextField(
                 modifier = Modifier.fillMaxWidth(),
                 value = name,
@@ -150,33 +166,35 @@ fun AddEditProductScreen(
                 isError = errorMessage != null && name.trim().isEmpty()
             )
 
-            ExpiryDatePicker(
-                selectedDateMillis = expiryDate
-            ) { millis -> 
-                expiryDate = millis
-                if (errorMessage != null) errorMessage = null
+            Row (
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                ExpiryDatePicker(
+                    selectedDateMillis = expiryDate
+                ) { millis ->
+                    expiryDate = millis
+                    if (errorMessage != null) errorMessage = null
+                }
+                Spacer(Modifier.width(20.dp))
+                if (expiryDate != null) {
+                    Text(
+                        text = "Дата истечения срока годности: ${formatDate(expiryDate!!)}",
+                        fontSize = 16.sp,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
             }
 
-            if (expiryDate != null) {
-                Text(
-                    text = "Дата: ${formatDate(expiryDate!!)}",
-                    fontSize = 14.sp,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.padding(top = 4.dp)
-                )
-            }
 
             if (errorMessage != null) {
                 Text(
                     text = errorMessage!!,
                     color = Color.Red,
-                    fontSize = 12.sp,
-                    modifier = Modifier.padding(top = 4.dp)
+                    fontSize = 16.sp,
                 )
             }
-
-            Spacer(modifier = Modifier.height(12.dp))
 
             Button(
                 onClick = ::onSubmit,

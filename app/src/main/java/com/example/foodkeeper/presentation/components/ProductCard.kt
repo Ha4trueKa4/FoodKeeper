@@ -21,6 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Card
+import coil3.compose.AsyncImage
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -94,12 +95,23 @@ fun ProductCard(
                         .clip(RoundedCornerShape(16.dp))
                         .background(Color(0xFFF5F5F5))
                 ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.milk),
-                        contentDescription = null,
-                        modifier = Modifier.fillMaxHeight(),
-                        contentScale = ContentScale.Crop
-                    )
+                    if (product.imageUrl.isNotBlank()) {
+                        AsyncImage(
+                            model = product.imageUrl,
+                            contentDescription = product.name,
+                            modifier = Modifier
+                                .fillMaxHeight()
+                                .fillMaxWidth(),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        Image(
+                            painter = painterResource(id = R.drawable.milk),
+                            contentDescription = null,
+                            modifier = Modifier.fillMaxHeight(),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.width(12.dp))
