@@ -3,7 +3,9 @@ package com.example.foodkeeper.presentation.components
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -31,6 +33,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -52,7 +55,8 @@ fun ProductCard(
     product: Product,
     modifier: Modifier = Modifier,
     onDelete: (Int) -> Unit,
-    onEdit: (Int) -> Unit
+    onEdit: (Int) -> Unit,
+    isPendingDeletion : Boolean = false
 ) {
     val daysLeft = calculateDaysLeft(product.expiryDate)
     
@@ -72,6 +76,14 @@ fun ProductCard(
     
     val animatedColor by animateColorAsState(targetValue = statusColor, label = "statusColor")
 
+    val cardBackground = if (isPendingDeletion) {
+        Color(0xFFFFEBEE)
+    } else {
+        MaterialTheme.colorScheme.surface
+    }
+
+    val cardAlpha = if (isPendingDeletion) 0.6f else 1f
+
     Card(
         modifier = modifier
             .padding(horizontal = Dimens.PaddingLarge, vertical = Dimens.PaddingMedium)
@@ -84,6 +96,7 @@ fun ProductCard(
             modifier = Modifier
                 .padding(12.dp)
                 .fillMaxWidth()
+                .alpha(cardAlpha)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -94,6 +107,11 @@ fun ProductCard(
                         .size(80.dp)
                         .clip(RoundedCornerShape(16.dp))
                         .background(Color(0xFFF5F5F5))
+                        .border(
+                            width = if (isPendingDeletion) 2.dp else 0.dp,
+                            color = if (isPendingDeletion) Color.Red else Color.Transparent,
+                            shape = RoundedCornerShape(16.dp)
+                        )
                 ) {
                     if (product.imageUrl.isNotBlank()) {
                         AsyncImage(
@@ -120,7 +138,7 @@ fun ProductCard(
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxHeight(),
-                    verticalArrangement = androidx.compose.foundation.layout.Arrangement.SpaceEvenly
+                    verticalArrangement = Arrangement.SpaceEvenly
                 ) {
                     Text(
                         text = product.name,
@@ -128,7 +146,11 @@ fun ProductCard(
                         fontWeight = FontWeight.Bold,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = if (isPendingDeletion) {
+                            Color.Red
+                        } else {
+                            MaterialTheme.colorScheme.onSurface
+                        }
                     )
 
                     Spacer(modifier = Modifier.height(4.dp))
@@ -136,13 +158,21 @@ fun ProductCard(
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(12.dp))
-                            .background(animatedColor.copy(alpha = 0.15f))
+                            .background(if (isPendingDeletion) {
+                                Color.Red.copy(alpha = 0.2f)
+                            } else {
+                                animatedColor.copy(alpha = 0.15f)
+                            })
                             .padding(horizontal = 8.dp, vertical = 4.dp)
                     ) {
                         Text(
-                            text = statusText,
+                            text = if (isPendingDeletion) {
+                                "⏳ Удаляется..."
+                            } else {
+                                statusText
+                            },
                             style = MaterialTheme.typography.bodySmall,
-                            color = animatedColor,
+                            color = if (isPendingDeletion) Color.Red else animatedColor,
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 11.sp
                         )
@@ -165,14 +195,21 @@ fun ProductCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(44.dp),
-                horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Box(
                     modifier = Modifier
                         .weight(1f)
                         .clip(RoundedCornerShape(12.dp))
-                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
-                        .clickable(onClick = { onEdit(product.id) }),
+                        .background(
+                            MaterialTheme.colorScheme.primary.copy(
+                                alpha = if (isPendingDeletion) 0.05f else 0.1f
+                            )
+                        )
+                        .clickable(
+                            enabled = !isPendingDeletion,
+                            onClick = { onEdit(product.id) }
+                        ),
                     contentAlignment = Alignment.Center
                 ) {
                     Row(
@@ -203,8 +240,17 @@ fun ProductCard(
                     modifier = Modifier
                         .weight(1f)
                         .clip(RoundedCornerShape(12.dp))
-                        .background(Color.Red.copy(alpha = 0.1f))
-                        .clickable(onClick = { onDelete(product.id)}),
+                        .background(
+                            if (isPendingDeletion) {
+                                Color.Red.copy(alpha = 0.3f)
+                            } else {
+                                Color.Red.copy(alpha = 0.1f)
+                            }
+                        )
+                        .clickable(
+                            enabled = !isPendingDeletion,
+                            onClick = { onDelete(product.id) }
+                        ),
                     contentAlignment = Alignment.Center
                 ) {
                     Row(
@@ -213,7 +259,7 @@ fun ProductCard(
                             .clip(RoundedCornerShape(12.dp))
                             .background(Color.Transparent)
                             .padding(horizontal = 8.dp),
-                        horizontalArrangement = androidx.compose.foundation.layout.Arrangement.Center,
+                        horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(

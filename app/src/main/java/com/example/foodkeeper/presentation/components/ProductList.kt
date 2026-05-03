@@ -13,12 +13,13 @@ fun ProductList(
     products: List<Product>,
     onDelete : (Int) -> Unit,
     onEdit : (Int) -> Unit,
+    pendingDeleteProductId : Int? = null
 ) {
     LazyColumn(
         modifier = modifier
     ) {
         items(products) {
-            product -> ProductCard(product, onDelete = onDelete, onEdit = onEdit)
+            product -> ProductCard(product, onDelete = onDelete, onEdit = onEdit, isPendingDeletion = product.id == pendingDeleteProductId)
         }
     }
 }

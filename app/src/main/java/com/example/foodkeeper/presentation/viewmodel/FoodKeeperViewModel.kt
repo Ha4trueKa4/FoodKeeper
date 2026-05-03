@@ -48,12 +48,11 @@ class FoodKeeperViewModel(
 
     private fun finalDeletion() {
         val product = _pendingDeleteProduct.value ?: return
-
+        deleteJob = null
         viewModelScope.launch {
             deleteProductUseCase.execute(product.id)
+            _pendingDeleteProduct.value = null
         }
-        deleteJob = null
-        _pendingDeleteProduct.value = null
     }
 
     fun undoDeletion() {
@@ -69,6 +68,7 @@ class FoodKeeperViewModel(
             addProductsUseCase.execute(product)
         }
     }
+
     fun deleteProduct(productId: Int) {
         viewModelScope.launch {
             deleteProductUseCase.execute(productId)

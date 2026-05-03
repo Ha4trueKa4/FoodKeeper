@@ -32,9 +32,7 @@ fun MainScreen(
 
     val snackBarHostState = remember { SnackbarHostState() }
 
-    val visibleProducts = products.filter {
-        it.id != pendingDeleteProduct?.id
-    }
+    val visibleProducts = products
 
     LaunchedEffect(pendingDeleteProduct) {
         pendingDeleteProduct?.let {
@@ -71,7 +69,8 @@ fun MainScreen(
             },
             onEdit = { productId->
                 onEdit(productId)
-            }
+            },
+            pendingDeleteProductId = pendingDeleteProduct?.id
         )
     }
 }
