@@ -1,15 +1,19 @@
 package com.example.foodkeeper.presentation.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
 import com.example.foodkeeper.presentation.screens.AddEditProductScreen
+import com.example.foodkeeper.presentation.screens.LoginScreen
 import com.example.foodkeeper.presentation.screens.MainScreen
-
+import com.example.foodkeeper.presentation.screens.RegisterScreen
 
 @Composable
 fun FoodKeeperNavigation(
@@ -18,7 +22,7 @@ fun FoodKeeperNavigation(
 ) {
     NavHost(
         navController = navHostController,
-        startDestination = Routes.Main
+        startDestination = Routes.Login
     ) {
 
         composable<Routes.Add> {
@@ -52,6 +56,14 @@ fun FoodKeeperNavigation(
                     navHostController.popBackStack()
                 }
             }
+        }
+
+        composable<Routes.Login> {
+            LoginScreen(navController = navHostController)
+        }
+
+        composable<Routes.Register> {
+            RegisterScreen (navController = navHostController)
         }
     }
 }
