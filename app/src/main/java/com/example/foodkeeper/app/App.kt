@@ -20,7 +20,12 @@ class App : Application() {
         super.onCreate()
         startKoin {
             androidContext(this@App)
-            modules(listOf(roomModule, repositoryModule, viewModelModule, useCaseModule))
+            modules(listOf(
+                roomModule,
+                repositoryModule,
+                viewModelModule,
+                useCaseModule
+            ))
         }
 
         ExpiryNotificationManager.createNotificationChannel(this)

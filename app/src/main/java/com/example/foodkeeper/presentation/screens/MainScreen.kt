@@ -17,6 +17,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.foodkeeper.presentation.components.AddProductFloatingActionButton
 import com.example.foodkeeper.presentation.components.ProductList
 import com.example.foodkeeper.presentation.navigation.Routes
+import com.example.foodkeeper.presentation.viewmodel.AuthViewModel
 import com.example.foodkeeper.presentation.viewmodel.FoodKeeperViewModel
 import org.koin.androidx.compose.koinViewModel
 
@@ -24,8 +25,10 @@ import org.koin.androidx.compose.koinViewModel
 fun MainScreen(
     modifier: Modifier = Modifier,
     viewModel: FoodKeeperViewModel = koinViewModel(),
+    authViewModel: AuthViewModel = koinViewModel(),
     onEdit : (Int) -> Unit,
-    onAdd : () -> Unit
+    onAdd : () -> Unit,
+    onLogout: () -> Unit = {}
 ) {
     val products by viewModel.products.collectAsState()
     val pendingDeleteProduct by viewModel.pendingDeleteProduct.collectAsState()
