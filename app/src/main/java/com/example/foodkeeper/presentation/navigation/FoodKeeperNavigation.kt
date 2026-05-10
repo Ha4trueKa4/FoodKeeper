@@ -11,9 +11,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
 import com.example.foodkeeper.presentation.screens.AddEditProductScreen
-import com.example.foodkeeper.presentation.screens.LoginScreen
+import com.example.foodkeeper.presentation.screens.AuthScreen
 import com.example.foodkeeper.presentation.screens.MainScreen
-import com.example.foodkeeper.presentation.screens.RegisterScreen
 
 @Composable
 fun FoodKeeperNavigation(
@@ -22,7 +21,7 @@ fun FoodKeeperNavigation(
 ) {
     NavHost(
         navController = navHostController,
-        startDestination = Routes.Login
+        startDestination = Routes.Auth
     ) {
 
         composable<Routes.Add> {
@@ -42,6 +41,11 @@ fun FoodKeeperNavigation(
                 },
                 onEdit = { productId ->
                     navHostController.navigate(Routes.Edit(productId))
+                },
+                onLogout = {
+                    navHostController.navigate(Routes.Auth) {
+                        popUpTo(0) { inclusive = true }
+                    }
                 }
             )
         }
@@ -58,12 +62,13 @@ fun FoodKeeperNavigation(
             }
         }
 
-        composable<Routes.Login> {
-            LoginScreen(navController = navHostController)
-        }
-
-        composable<Routes.Register> {
-            RegisterScreen (navController = navHostController)
+        composable<Routes.Auth> {
+            AuthScreen {
+                navHostController.navigate(Routes.Main) {
+                    popUpTo(0) { inclusive = true }
+                    launchSingleTop = true
+                }
+            }
         }
     }
 }

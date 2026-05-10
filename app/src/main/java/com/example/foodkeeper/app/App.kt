@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
+import com.example.foodkeeper.di.authModule
 import com.example.foodkeeper.di.repositoryModule
 import com.example.foodkeeper.di.roomModule
 import com.example.foodkeeper.di.useCaseModule
@@ -24,7 +25,8 @@ class App : Application() {
                 roomModule,
                 repositoryModule,
                 viewModelModule,
-                useCaseModule
+                useCaseModule,
+                authModule
             ))
         }
 

@@ -1,11 +1,18 @@
 package com.example.foodkeeper.presentation.screens
 
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Logout
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -21,6 +28,7 @@ import com.example.foodkeeper.presentation.viewmodel.AuthViewModel
 import com.example.foodkeeper.presentation.viewmodel.FoodKeeperViewModel
 import org.koin.androidx.compose.koinViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
     modifier: Modifier = Modifier,
@@ -52,6 +60,19 @@ fun MainScreen(
     }
 
     Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("FoodKeeper") },
+                actions = {
+                    IconButton(onClick = {
+                        authViewModel.signOut()
+                        onLogout()
+                    }) {
+                        Icon(Icons.Default.Logout, contentDescription = "Выйти из аккаунта")
+                    }
+                }
+            )
+        },
         snackbarHost = {
             SnackbarHost(hostState = snackBarHostState)
         },

@@ -14,6 +14,7 @@ import com.example.foodkeeper.domain.usecases.GetProductsUseCase
 import com.example.foodkeeper.domain.usecases.UpdateProductUseCase
 import com.example.foodkeeper.presentation.viewmodel.AuthViewModel
 import com.example.foodkeeper.presentation.viewmodel.FoodKeeperViewModel
+import com.google.firebase.auth.FirebaseAuth
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 
@@ -29,7 +30,7 @@ val viewModelModule = module {
         )
     }
     viewModel {
-        AuthViewModel()
+        AuthViewModel(get())
     }
 }
 
@@ -60,5 +61,11 @@ val useCaseModule = module {
     }
     single {
         GetProductByIdUseCase(get())
+    }
+}
+
+val authModule = module {
+    single {
+        FirebaseAuth.getInstance()
     }
 }
