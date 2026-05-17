@@ -1,8 +1,8 @@
 package com.example.foodkeeper.presentation.viewmodel
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.foodkeeper.data.local.ProductRepositoryImpl
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
@@ -13,7 +13,10 @@ import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.time.Duration.Companion.seconds
 
-class AuthViewModel(private val auth : FirebaseAuth) : ViewModel() {
+class AuthViewModel(
+    private val auth: FirebaseAuth,
+    private val repository: ProductRepositoryImpl
+) : ViewModel() {
 
     private val _authState = MutableStateFlow<AuthState>(AuthState.Unauthenticated)
     val authState = _authState
@@ -27,6 +30,7 @@ class AuthViewModel(private val auth : FirebaseAuth) : ViewModel() {
             _authState.value = AuthState.Unauthenticated
         } else {
             _authState.value = AuthState.Authenticated
+            syncProductsFromFirebase()
         }
     }
 
@@ -36,13 +40,13 @@ class AuthViewModel(private val auth : FirebaseAuth) : ViewModel() {
             return
         }
 
-
         viewModelScope.launch {
             _authState.value = AuthState.Loading
             try {
                 withTimeoutOrNull(10.seconds) {
                     auth.signInWithEmailAndPassword(email, password).await()
                 }
+                syncProductsFromFirebase()
                 _authState.value = AuthState.Authenticated
             } catch (e: FirebaseAuthInvalidCredentialsException) {
                 _authState.value = AuthState.Error("Неверная почта или пароль")
@@ -52,7 +56,7 @@ class AuthViewModel(private val auth : FirebaseAuth) : ViewModel() {
         }
     }
 
-    fun register (email : String, password : String) {
+    fun register(email: String, password: String) {
         if (!validateInput(email, password)) {
             _authState.value = AuthState.Error("Проверь корректность email и пароля")
             return
@@ -63,13 +67,13 @@ class AuthViewModel(private val auth : FirebaseAuth) : ViewModel() {
             return
         }
 
-
         viewModelScope.launch {
             _authState.value = AuthState.Loading
             try {
                 withTimeoutOrNull(10.seconds) {
                     auth.createUserWithEmailAndPassword(email, password).await()
                 }
+                syncProductsFromFirebase()
                 _authState.value = AuthState.Authenticated
             } catch (e: FirebaseAuthWeakPasswordException) {
                 _authState.value = AuthState.Error("Слабый пароль. Используй буквы, цифры и спецсимволы")
@@ -82,8 +86,34 @@ class AuthViewModel(private val auth : FirebaseAuth) : ViewModel() {
     }
 
     fun signOut() {
-        auth.signOut()
-        _authState.value = AuthState.Unauthenticated
+        viewModelScope.launch {
+            try {
+                clearAllProducts()
+                auth.signOut()
+                _authState.value = AuthState.Unauthenticated
+            } catch (e: Exception) {
+                auth.signOut()
+                _authState.value = AuthState.Unauthenticated
+            }
+        }
+    }
+
+    private fun syncProductsFromFirebase() {
+        viewModelScope.launch {
+            try {
+                repository.syncFromFirestore()
+            } catch (e: Exception) {
+                // Sync failed, will retry through SyncWorker
+            }
+        }
+    }
+
+    private suspend fun clearAllProducts() {
+        try {
+            repository.clearAllProducts()
+        } catch (e: Exception) {
+            // Ignore
+        }
     }
 
     private fun validateInput(email: String, password: String): Boolean {
@@ -97,7 +127,6 @@ sealed class AuthState {
     object Authenticated : AuthState()
     object Unauthenticated : AuthState()
     object Loading : AuthState()
-    data class Error(val message : String) : AuthState()
+    data class Error(val message: String) : AuthState()
 }
-
 

@@ -4,6 +4,7 @@ package com.example.foodkeeper.di
 import androidx.room.Room
 import com.example.foodkeeper.data.local.FoodKeeperDatabase
 import com.example.foodkeeper.data.local.ProductRepositoryImpl
+import com.example.foodkeeper.data.local.fb.ProductFirestoreDataSource
 import com.example.foodkeeper.domain.repository.ProductRepository
 import com.example.foodkeeper.domain.usecases.AddProductUseCase
 import com.example.foodkeeper.domain.usecases.DeleteProductUseCase
@@ -30,20 +31,31 @@ val viewModelModule = module {
         )
     }
     viewModel {
-        AuthViewModel(get())
+        AuthViewModel(get(), get())
     }
 }
 
 val roomModule = module {
     single {
-        Room.databaseBuilder(get(), FoodKeeperDatabase::class.java, "my_database")
+        Room.databaseBuilder(get(), FoodKeeperDatabase::class.java, "food_keeper_database")
+            .fallbackToDestructiveMigration()
             .build()
     }
     single { get<FoodKeeperDatabase>().getProductDao() }
 }
 
 val repositoryModule = module {
-    single<ProductRepository> { ProductRepositoryImpl(get()) }
+
+    single<ProductRepositoryImpl> {
+        ProductRepositoryImpl(
+            get(), // ProductDao
+            get()  // ProductFirestoreDataSource
+        )
+    }
+    
+    single<ProductRepository> {
+        get<ProductRepositoryImpl>()
+    }
 }
 
 val useCaseModule = module {
@@ -67,5 +79,23 @@ val useCaseModule = module {
 val authModule = module {
     single {
         FirebaseAuth.getInstance()
+    }
+}
+
+val firebaseModule = module {
+
+    single {
+        com.google.firebase.firestore.FirebaseFirestore.getInstance()
+    }
+
+    single {
+        com.google.firebase.auth.FirebaseAuth.getInstance()
+    }
+}
+
+val firestoreModule = module {
+
+    single {
+        ProductFirestoreDataSource(get())
     }
 }

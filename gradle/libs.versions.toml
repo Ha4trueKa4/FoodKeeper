@@ -19,8 +19,7 @@ runtime = "1.10.6"
 coil = "3.0.0-alpha08"
 workManager = "2.9.1"
 gmsVersion = "4.4.4"
-bomVersion = "34.12.0"
-firebaseAuthKtx = "24.0.1"
+bomVersion = "33.3.0"
 
 
 
@@ -62,7 +61,8 @@ androidx-compose-runtime = { group = "androidx.compose.runtime", name = "runtime
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
 androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "workManager" }
 firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "bomVersion" }
-firebase-auth = { group = "com.google.firebase", name = "firebase-auth"}
+firebase-auth-ktx = { group = "com.google.firebase", name = "firebase-auth-ktx" }
+firebase-firestore-ktx = { group = "com.google.firebase", name = "firebase-firestore-ktx" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
