@@ -9,7 +9,9 @@ fun ProductEntity.toDomain(): Product {
         id = id,
         name = name,
         expiryDate = expiryDate,
-        imageUrl = imageUrl
+        imageUrl = imageUrl,
+        userId = userId,
+        firebaseId = firebaseId
     )
 }
 
@@ -18,6 +20,8 @@ fun Product.toEntity(): ProductEntity {
         id = id,
         name = name,
         expiryDate = expiryDate,
-        imageUrl = imageUrl
+        imageUrl = imageUrl,
+        userId = userId,
+        firebaseId = firebaseId
     )
 }

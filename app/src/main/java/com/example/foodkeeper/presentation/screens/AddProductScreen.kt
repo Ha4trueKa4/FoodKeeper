@@ -45,6 +45,7 @@ import com.example.foodkeeper.domain.Product
 import com.example.foodkeeper.presentation.components.ExpiryDatePicker
 import com.example.foodkeeper.presentation.components.ImagePickerButton
 import com.example.foodkeeper.presentation.viewmodel.FoodKeeperViewModel
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import java.text.SimpleDateFormat
@@ -91,11 +92,15 @@ fun AddEditProductScreen(
             errorMessage = "Выберите дату"
             return
         }
+        
+        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
+
         val product = Product(
             id = productId ?: 0,
             name = trimmedName,
             expiryDate = expiryDate!!,
-            imageUrl = imageUri?.toString() ?: ""
+            imageUrl = imageUri?.toString() ?: "",
+            userId = userId
         )
         coroutineScope.launch {
             if (isEditMode) {

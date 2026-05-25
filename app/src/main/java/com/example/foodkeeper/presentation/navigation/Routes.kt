@@ -4,11 +4,14 @@ import kotlinx.serialization.Serializable
 
 sealed class Routes {
     @Serializable
-    data object Add : Routes()
+    data object Auth : Routes()
+
     @Serializable
     data object Main : Routes()
 
     @Serializable
-    data class Edit(val productId : Int) : Routes()
+    data object Add : Routes()
 
+    @Serializable
+    data class Edit(val productId: Int) : Routes()
 }
