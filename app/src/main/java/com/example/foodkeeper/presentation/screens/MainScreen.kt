@@ -26,6 +26,8 @@ import com.example.foodkeeper.presentation.components.ProductList
 import com.example.foodkeeper.presentation.navigation.Routes
 import com.example.foodkeeper.presentation.viewmodel.AuthViewModel
 import com.example.foodkeeper.presentation.viewmodel.FoodKeeperViewModel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -41,21 +43,31 @@ fun MainScreen(
     val products by viewModel.products.collectAsState()
     val pendingDeleteProduct by viewModel.pendingDeleteProduct.collectAsState()
 
+    val isLoadingList by viewModel.isLoadingList.collectAsState()
+
     val snackBarHostState = remember { SnackbarHostState() }
 
     val visibleProducts = products
 
     LaunchedEffect(pendingDeleteProduct) {
-        pendingDeleteProduct?.let {
-            val result = snackBarHostState.showSnackbar(
-                message = "Продукт удалится через 3 секунды",
-                actionLabel = "Отменить",
-                duration = SnackbarDuration.Short
-            )
-
-            if (result == SnackbarResult.ActionPerformed) {
-                viewModel.undoDeletion()
+        pendingDeleteProduct?.let { product ->
+            snackBarHostState.currentSnackbarData?.dismiss()
+            val job = launch {
+                val result = snackBarHostState.showSnackbar(
+                    message = "${product.name} будет удалён",
+                    actionLabel = "Отменить",
+                    duration = SnackbarDuration.Indefinite,
+                    withDismissAction = false
+                )
+                if (result == SnackbarResult.ActionPerformed) {
+                    viewModel.cancelDelete()
+                }
             }
+            delay(3000)
+
+            job.cancel()
+            snackBarHostState.currentSnackbarData?.dismiss()
+            viewModel.confirmDelete()
         }
     }
 
@@ -85,10 +97,11 @@ fun MainScreen(
         ProductList(
             modifier = Modifier.padding(innerPadding),
             products = visibleProducts,
+            isLoading = isLoadingList,
             onDelete = { productId ->
                 val productToDelete = products.find { it.id == productId }
                 productToDelete?.let {
-                    viewModel.deleteRequest(it)
+                    viewModel.requestDelete(it)
                 }
             },
             onEdit = { productId->

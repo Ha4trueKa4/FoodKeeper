@@ -54,34 +54,26 @@ import java.util.Locale
 fun ProductCard(
     product: Product,
     modifier: Modifier = Modifier,
-    onDelete: (Int) -> Unit,
     onEdit: (Int) -> Unit,
-    isPendingDeletion : Boolean = false
+    isPendingDeletion: Boolean = false
 ) {
     val daysLeft = calculateDaysLeft(product.expiryDate)
-    
+
     val statusColor = when {
         daysLeft < 0 -> Color(0xFFD32F2F)
         daysLeft <= 3 -> Color(0xFFFFA726)
         daysLeft <= 7 -> Color(0xFFFDD835)
         else -> Color(0xFF66BB6A)
     }
-    
+
     val statusText = when {
         daysLeft < 0 -> "Истекло"
         daysLeft == 0 -> "Истекает сегодня"
         daysLeft == 1 -> "Остался 1 день"
         else -> "Осталось $daysLeft дней"
     }
-    
+
     val animatedColor by animateColorAsState(targetValue = statusColor, label = "statusColor")
-
-    val cardBackground = if (isPendingDeletion) {
-        Color(0xFFFFEBEE)
-    } else {
-        MaterialTheme.colorScheme.surface
-    }
-
     val cardAlpha = if (isPendingDeletion) 0.6f else 1f
 
     Card(
@@ -92,195 +84,103 @@ fun ProductCard(
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
-        Column(
+        Row(
             modifier = Modifier
                 .padding(12.dp)
                 .fillMaxWidth()
-                .alpha(cardAlpha)
+                .alpha(cardAlpha),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(80.dp)
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(Color(0xFFF5F5F5))
-                        .border(
-                            width = if (isPendingDeletion) 2.dp else 0.dp,
-                            color = if (isPendingDeletion) Color.Red else Color.Transparent,
-                            shape = RoundedCornerShape(16.dp)
-                        )
-                ) {
-                    if (product.imageUrl.isNotBlank()) {
-                        AsyncImage(
-                            model = product.imageUrl,
-                            contentDescription = product.name,
-                            modifier = Modifier
-                                .fillMaxHeight()
-                                .fillMaxWidth(),
-                            contentScale = ContentScale.Crop
-                        )
-                    } else {
-                        Image(
-                            painter = painterResource(id = R.drawable.milk),
-                            contentDescription = null,
-                            modifier = Modifier.fillMaxHeight(),
-                            contentScale = ContentScale.Crop
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.width(12.dp))
-
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight(),
-                    verticalArrangement = Arrangement.SpaceEvenly
-                ) {
-                    Text(
-                        text = product.name,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                        color = if (isPendingDeletion) {
-                            Color.Red
-                        } else {
-                            MaterialTheme.colorScheme.onSurface
-                        }
+            Box(
+                modifier = Modifier
+                    .size(80.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(Color(0xFFF5F5F5))
+                    .border(
+                        width = if (isPendingDeletion) 2.dp else 0.dp,
+                        color = if (isPendingDeletion) Color.Red else Color.Transparent,
+                        shape = RoundedCornerShape(16.dp)
                     )
-
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(if (isPendingDeletion) {
-                                Color.Red.copy(alpha = 0.2f)
-                            } else {
-                                animatedColor.copy(alpha = 0.15f)
-                            })
-                            .padding(horizontal = 8.dp, vertical = 4.dp)
-                    ) {
-                        Text(
-                            text = if (isPendingDeletion) {
-                                "⏳ Удаляется..."
-                            } else {
-                                statusText
-                            },
-                            style = MaterialTheme.typography.bodySmall,
-                            color = if (isPendingDeletion) Color.Red else animatedColor,
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 11.sp
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    Text(
-                        text = "Дата: ${formatDate(product.expiryDate)}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 10.sp
+            ) {
+                if (product.imageUrl.isNotBlank()) {
+                    AsyncImage(
+                        model = product.imageUrl,
+                        contentDescription = product.name,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Image(
+                        painter = painterResource(id = R.drawable.milk),
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.width(12.dp))
 
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(44.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.SpaceEvenly
             ) {
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(
-                            MaterialTheme.colorScheme.primary.copy(
-                                alpha = if (isPendingDeletion) 0.05f else 0.1f
-                            )
-                        )
-                        .clickable(
-                            enabled = !isPendingDeletion,
-                            onClick = { onEdit(product.id) }
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(Color.Transparent)
-                            .padding(horizontal = 8.dp),
-                        horizontalArrangement = androidx.compose.foundation.layout.Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            Icons.Default.Edit,
-                            contentDescription = "Редактировать",
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Text(
-                            text = "Редактировать",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.primary,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    }
-                }
+                Text(
+                    text = product.name,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    color = if (isPendingDeletion) Color.Red else MaterialTheme.colorScheme.onSurface
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
 
                 Box(
                     modifier = Modifier
-                        .weight(1f)
                         .clip(RoundedCornerShape(12.dp))
                         .background(
-                            if (isPendingDeletion) {
-                                Color.Red.copy(alpha = 0.3f)
-                            } else {
-                                Color.Red.copy(alpha = 0.1f)
-                            }
+                            if (isPendingDeletion) Color.Red.copy(alpha = 0.2f)
+                            else animatedColor.copy(alpha = 0.15f)
                         )
-                        .clickable(
-                            enabled = !isPendingDeletion,
-                            onClick = { onDelete(product.id) }
-                        ),
-                    contentAlignment = Alignment.Center
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
                 ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(Color.Transparent)
-                            .padding(horizontal = 8.dp),
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            Icons.Default.Delete,
-                            contentDescription = "Удалить",
-                            tint = Color.Red,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Text(
-                            text = "Удалить",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = Color.Red,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    }
+                    Text(
+                        text = if (isPendingDeletion) "⏳ Удаляется..." else statusText,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (isPendingDeletion) Color.Red else animatedColor,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 11.sp
+                    )
                 }
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Text(
+                    text = "Дата: ${formatDate(product.expiryDate)}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontSize = 10.sp
+                )
+            }
+
+            IconButton(
+                onClick = { onEdit(product.id) },
+                enabled = !isPendingDeletion
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Edit,
+                    contentDescription = "Редактировать",
+                    tint = if (isPendingDeletion)
+                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                    else
+                        MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(20.dp)
+                )
             }
         }
     }
 }
-
 private fun calculateDaysLeft(expiryDateMillis: Long): Int {
     val today = Date()
     val expiryDate = Date(expiryDateMillis)

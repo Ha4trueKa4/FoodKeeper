@@ -94,7 +94,7 @@ fun AddEditProductScreen(
         }
         
         val userId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
-        
+
         val product = Product(
             id = productId ?: 0,
             name = trimmedName,

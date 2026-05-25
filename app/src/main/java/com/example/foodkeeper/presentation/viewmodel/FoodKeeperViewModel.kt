@@ -1,5 +1,6 @@
 package com.example.foodkeeper.presentation.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.foodkeeper.domain.Product
@@ -14,6 +15,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -25,7 +27,10 @@ class FoodKeeperViewModel(
     private val updateProductUseCase: UpdateProductUseCase
 
 ) : ViewModel() {
+
+    val isLoadingList = MutableStateFlow(true)
     val products : StateFlow<List<Product>> = getProductsUseCase.execute()
+        .onEach { isLoadingList.value = false }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
@@ -35,29 +40,25 @@ class FoodKeeperViewModel(
     private val _pendingDeleteProduct = MutableStateFlow<Product?>(null)
     val pendingDeleteProduct : StateFlow<Product?> = _pendingDeleteProduct.asStateFlow()
 
-    private var deleteJob : Job? = null
 
-    fun deleteRequest(product: Product) {
-        deleteJob?.cancel()
+
+    fun requestDelete(product: Product) {
+        Log.d("VM_DELETE", "requestDelete: ${product.name}")
+        _pendingDeleteProduct.value?.let { prev ->
+            Log.d("VM_DELETE", "immediately deleting prev: ${prev.name}")
+            viewModelScope.launch { deleteProductUseCase.execute(prev.id) }
+        }
         _pendingDeleteProduct.value = product
-        deleteJob = viewModelScope.launch {
-            delay(3000)
-            finalDeletion()
-        }
     }
 
-    private fun finalDeletion() {
+    fun confirmDelete() {
+        Log.d("VM_DELETE", "confirmDelete: ${_pendingDeleteProduct.value?.name}")
         val product = _pendingDeleteProduct.value ?: return
-        deleteJob = null
-        viewModelScope.launch {
-            deleteProductUseCase.execute(product.id)
-            _pendingDeleteProduct.value = null
-        }
+        _pendingDeleteProduct.value = null
+        viewModelScope.launch { deleteProductUseCase.execute(product.id) }
     }
 
-    fun undoDeletion() {
-        deleteJob?.cancel()
-        deleteJob = null
+    fun cancelDelete() {
         _pendingDeleteProduct.value = null
     }
 
