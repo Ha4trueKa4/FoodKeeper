@@ -54,7 +54,7 @@ import java.util.Locale
 fun ProductCard(
     product: Product,
     modifier: Modifier = Modifier,
-    onEdit: (Int) -> Unit,
+    onEdit: (String) -> Unit,
     isPendingDeletion: Boolean = false
 ) {
     val daysLeft = calculateDaysLeft(product.expiryDate)
@@ -165,7 +165,7 @@ fun ProductCard(
             }
 
             IconButton(
-                onClick = { onEdit(product.id) },
+                onClick = { onEdit(product.firebaseId) },
                 enabled = !isPendingDeletion
             ) {
                 Icon(

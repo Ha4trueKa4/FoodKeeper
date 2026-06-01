@@ -39,8 +39,8 @@ fun FoodKeeperNavigation(
                 onAdd = {
                     navHostController.navigate(Routes.Add)
                 },
-                onEdit = { productId ->
-                    navHostController.navigate(Routes.Edit(productId))
+                onEdit = { firebaseId ->
+                    navHostController.navigate(Routes.Edit(firebaseId))
                 },
                 onLogout = {
                     navHostController.navigate(Routes.Auth) {
@@ -53,7 +53,7 @@ fun FoodKeeperNavigation(
         composable<Routes.Edit> { backStackEntry ->
             val route = backStackEntry.toRoute<Routes.Edit>()
             AddEditProductScreen(
-                productId = route.productId
+                productId = route.firebaseId
             ) {
                 val navBackStackEntry = navHostController.currentBackStackEntry
                 if (navBackStackEntry?.lifecycle?.currentState == Lifecycle.State.RESUMED) {

@@ -7,14 +7,14 @@ import java.util.UUID
 
 @Entity(
     tableName = "products",
-    indices = [Index(value = ["firebaseId"], unique = true)]  // ← UNIQUE constraint
+    indices = [Index(value = ["firebaseId"], unique = true)]
 )
 data class ProductEntity(
-    @PrimaryKey(autoGenerate = true)
-    val id: Int = 0,
+    @PrimaryKey
+    val firebaseId: String,
     val name: String,
     val expiryDate : Long,
     val imageUrl: String,
     val userId: String = "",
-    val firebaseId: String = UUID.randomUUID().toString()
+
 )

@@ -40,8 +40,8 @@ import com.example.foodkeeper.presentation.theme.Dimens
 fun SwipeableProductCard(
     modifier: Modifier = Modifier,
     product: Product,
-    onDelete: (Int) -> Unit,
-    onEdit: (Int) -> Unit,
+    onDelete: (String) -> Unit,
+    onEdit: (String) -> Unit,
     isPendingDeletion : Boolean = false
 ) {
     val currentIsPending by rememberUpdatedState(isPendingDeletion)
@@ -52,7 +52,7 @@ fun SwipeableProductCard(
     val dismissState = rememberSwipeToDismissBoxState(
         confirmValueChange = {value ->
             if (value == SwipeToDismissBoxValue.EndToStart && !currentIsPending) {
-                currentOnDelete(product.id)
+                currentOnDelete(product.firebaseId)
             }
             false
         },

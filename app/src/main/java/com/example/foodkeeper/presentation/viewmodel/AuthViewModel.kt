@@ -100,20 +100,12 @@ class AuthViewModel(
 
     private fun syncProductsFromFirebase() {
         viewModelScope.launch {
-            try {
-                repository.syncFromFirestore()
-            } catch (e: Exception) {
-                // Sync failed, will retry through SyncWorker
-            }
+            repository.syncFromFirestore()
         }
     }
 
     private suspend fun clearAllProducts() {
-        try {
-            repository.clearAllProducts()
-        } catch (e: Exception) {
-            // Ignore
-        }
+        repository.clearAllProducts()
     }
 
     private fun validateInput(email: String, password: String): Boolean {

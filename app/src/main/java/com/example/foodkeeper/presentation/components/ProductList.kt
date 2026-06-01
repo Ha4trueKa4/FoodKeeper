@@ -20,33 +20,30 @@ import com.example.foodkeeper.domain.Product
 fun ProductList(
     modifier: Modifier = Modifier,
     products: List<Product>,
-    isLoading : Boolean = false,
-    onDelete : (Int) -> Unit,
-    onEdit : (Int) -> Unit,
-    pendingDeleteProductId : Int? = null
+    isLoading: Boolean = false,
+    onDelete: (String) -> Unit,
+    onEdit: (String) -> Unit,
+    pendingDeleteProductId: String? = null
 ) {
     when {
         isLoading -> Unit
         products.isEmpty() -> EmptyProductsState(modifier = modifier)
-        else -> LazyColumn(
-            modifier = modifier
-            ) {
+        else -> LazyColumn(modifier = modifier) {
             items(
                 items = products,
-                key = {it.id}
+                key = { it.firebaseId }
             ) { product ->
                 SwipeableProductCard(
                     modifier = Modifier.animateItem(
-                        fadeOutSpec = tween (durationMillis = 200),
+                        fadeOutSpec = tween(durationMillis = 200),
                         placementSpec = spring(stiffness = Spring.StiffnessMedium)
                     ),
-                    product, onDelete = onDelete,
+                    product = product,
+                    onDelete = onDelete,
                     onEdit = onEdit,
-                    isPendingDeletion = product.id == pendingDeleteProductId
+                    isPendingDeletion = product.firebaseId == pendingDeleteProductId
                 )
             }
         }
     }
-
-
 }

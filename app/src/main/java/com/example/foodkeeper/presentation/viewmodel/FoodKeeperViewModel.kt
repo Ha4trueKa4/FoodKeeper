@@ -43,19 +43,16 @@ class FoodKeeperViewModel(
 
 
     fun requestDelete(product: Product) {
-        Log.d("VM_DELETE", "requestDelete: ${product.name}")
         _pendingDeleteProduct.value?.let { prev ->
-            Log.d("VM_DELETE", "immediately deleting prev: ${prev.name}")
-            viewModelScope.launch { deleteProductUseCase.execute(prev.id) }
+            viewModelScope.launch { deleteProductUseCase.execute(prev.firebaseId) }
         }
         _pendingDeleteProduct.value = product
     }
 
     fun confirmDelete() {
-        Log.d("VM_DELETE", "confirmDelete: ${_pendingDeleteProduct.value?.name}")
         val product = _pendingDeleteProduct.value ?: return
         _pendingDeleteProduct.value = null
-        viewModelScope.launch { deleteProductUseCase.execute(product.id) }
+        viewModelScope.launch { deleteProductUseCase.execute(product.firebaseId) }
     }
 
     fun cancelDelete() {
@@ -70,9 +67,9 @@ class FoodKeeperViewModel(
         }
     }
 
-    fun deleteProduct(productId: Int) {
+    fun deleteProduct(firebaseId : String) {
         viewModelScope.launch {
-            deleteProductUseCase.execute(productId)
+            deleteProductUseCase.execute(firebaseId)
         }
     }
 
@@ -82,7 +79,7 @@ class FoodKeeperViewModel(
         }
     }
 
-    suspend fun getProductById(productId: Int) : Product? {
-        return getProductByIdUseCase.execute(productId)
+    suspend fun getProductById(firebaseId : String) : Product? {
+        return getProductByIdUseCase.execute(firebaseId)
     }
 }

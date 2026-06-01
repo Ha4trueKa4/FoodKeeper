@@ -10,7 +10,6 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ProductDao {
-
     @Insert
     suspend fun insert(product: ProductEntity)
 
@@ -20,18 +19,15 @@ interface ProductDao {
     @Query("SELECT * FROM products")
     fun getAllProducts(): Flow<List<ProductEntity>>
 
-    @Query("DELETE FROM products WHERE id = :productId")
-    suspend fun deleteProduct(productId: Int)
+    @Query("DELETE FROM products WHERE firebaseId = :firebaseId")
+    suspend fun deleteProduct(firebaseId: String)
 
-    @Query("SELECT * FROM products WHERE id = :productId LIMIT 1")
-    suspend fun getProductById(productId: Int): ProductEntity?
+    @Query("SELECT * FROM products WHERE firebaseId = :firebaseId LIMIT 1")
+    suspend fun getProductById(firebaseId: String): ProductEntity?
 
     @Update
     suspend fun updateProduct(product: ProductEntity)
 
     @Query("DELETE FROM products")
     suspend fun clearAll()
-
-    @Query("SELECT * FROM products WHERE firebaseId = :firebaseId LIMIT 1")
-    suspend fun getProductByFirebaseId(firebaseId: String): ProductEntity?
 }

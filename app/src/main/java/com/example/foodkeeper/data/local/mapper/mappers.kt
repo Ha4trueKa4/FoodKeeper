@@ -6,22 +6,20 @@ import com.example.foodkeeper.domain.Product
 
 fun ProductEntity.toDomain(): Product {
     return Product(
-        id = id,
+        firebaseId = firebaseId,
         name = name,
         expiryDate = expiryDate,
         imageUrl = imageUrl,
         userId = userId,
-        firebaseId = firebaseId
     )
 }
 
 fun Product.toEntity(): ProductEntity {
     return ProductEntity(
-        id = id,
+        firebaseId = firebaseId,
         name = name,
         expiryDate = expiryDate,
         imageUrl = imageUrl,
         userId = userId,
-        firebaseId = firebaseId
     )
 }

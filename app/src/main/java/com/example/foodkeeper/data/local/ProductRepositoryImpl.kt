@@ -24,32 +24,19 @@ class ProductRepositoryImpl(
     }
 
     override suspend fun addProduct(product: Product) {
-        val productWithFirebaseId = if (product.firebaseId.isEmpty()) {
-            product.copy(firebaseId = UUID.randomUUID().toString())
-        } else {
-            product
-        }
-        
-        productDao.insert(productWithFirebaseId.toEntity())
-        try {
-            firestore.addProduct(productWithFirebaseId)
-        } catch (e: Exception) {
+        productDao.insert(product.toEntity())
+        firestore.addProduct(product)
+    }
 
+    override suspend fun deleteProduct(firebaseId: String) {
+        productDao.deleteProduct(firebaseId)
+        if (firebaseId.isNotBlank()) {
+            firestore.deleteProduct(firebaseId)
         }
     }
 
-    override suspend fun deleteProduct(productId: Int) {
-        val product = productDao.getProductById(productId)
-        productDao.deleteProduct(productId)
-
-        product?.let {
-            firestore.deleteProduct(it.firebaseId)
-        }
-
-    }
-
-    override suspend fun getProductById(productId: Int): Product? {
-        return productDao.getProductById(productId)?.toDomain()
+    override suspend fun getProductById(firebaseId: String): Product? {
+        return productDao.getProductById(firebaseId)?.toDomain()
     }
 
     override suspend fun updateProduct(product: Product) {

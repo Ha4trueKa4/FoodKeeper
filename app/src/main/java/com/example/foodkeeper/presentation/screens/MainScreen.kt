@@ -36,7 +36,7 @@ fun MainScreen(
     modifier: Modifier = Modifier,
     viewModel: FoodKeeperViewModel = koinViewModel(),
     authViewModel: AuthViewModel = koinViewModel(),
-    onEdit : (Int) -> Unit,
+    onEdit : (String) -> Unit,
     onAdd : () -> Unit,
     onLogout: () -> Unit = {}
 ) {
@@ -98,16 +98,16 @@ fun MainScreen(
             modifier = Modifier.padding(innerPadding),
             products = visibleProducts,
             isLoading = isLoadingList,
-            onDelete = { productId ->
-                val productToDelete = products.find { it.id == productId }
+            onDelete = { firebaseId ->
+                val productToDelete = products.find { it.firebaseId == firebaseId }
                 productToDelete?.let {
                     viewModel.requestDelete(it)
                 }
             },
-            onEdit = { productId->
-                onEdit(productId)
+            onEdit = { firebaseId ->
+                onEdit(firebaseId)
             },
-            pendingDeleteProductId = pendingDeleteProduct?.id
+            pendingDeleteProductId = pendingDeleteProduct?.firebaseId
         )
     }
 }

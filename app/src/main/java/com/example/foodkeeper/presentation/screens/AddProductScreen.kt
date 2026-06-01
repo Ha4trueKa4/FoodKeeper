@@ -1,6 +1,5 @@
 package com.example.foodkeeper.presentation.screens
 import android.net.Uri
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -9,21 +8,22 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -37,10 +37,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.foodkeeper.domain.Product
 import com.example.foodkeeper.presentation.components.ExpiryDatePicker
 import com.example.foodkeeper.presentation.components.ImagePickerButton
@@ -51,20 +49,21 @@ import org.koin.androidx.compose.koinViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.UUID
+import androidx.core.net.toUri
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddEditProductScreen(
     modifier: Modifier = Modifier,
     viewModel: FoodKeeperViewModel = koinViewModel(),
-    productId: Int?,
+    productId: String?,
     onNavigateBack: () -> Unit,
 ) {
     val isEditMode = productId != null
     var name by rememberSaveable { mutableStateOf("") }
     var expiryDate by rememberSaveable { mutableStateOf<Long?>(null) }
     var imageUri by rememberSaveable { mutableStateOf<Uri?>(null) }
-
     var errorMessage by rememberSaveable { mutableStateOf<String?>(null) }
 
     LaunchedEffect(productId) {
@@ -74,7 +73,7 @@ fun AddEditProductScreen(
                 name = product.name
                 expiryDate = product.expiryDate
                 if (product.imageUrl.isNotBlank()) {
-                    imageUri = Uri.parse(product.imageUrl)
+                    imageUri = product.imageUrl.toUri()
                 }
             }
         }
@@ -85,29 +84,22 @@ fun AddEditProductScreen(
     fun onSubmit() {
         val trimmedName = name.trim()
         if (trimmedName.isEmpty()) {
-            errorMessage = "Введите название продукта"
-            return
+            errorMessage = "Введите название продукта"; return
         }
         if (expiryDate == null) {
-            errorMessage = "Выберите дату"
-            return
+            errorMessage = "Выберите дату"; return
         }
-        
         val userId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
-
         val product = Product(
-            id = productId ?: 0,
+            firebaseId = if (isEditMode) productId else UUID.randomUUID().toString(),
             name = trimmedName,
             expiryDate = expiryDate!!,
             imageUrl = imageUri?.toString() ?: "",
             userId = userId
         )
         coroutineScope.launch {
-            if (isEditMode) {
-                viewModel.updateProduct(product)
-            } else {
-                viewModel.addProductAndAwait(product)
-            }
+            if (isEditMode) viewModel.updateProduct(product)
+            else viewModel.addProductAndAwait(product)
             onNavigateBack()
         }
     }
@@ -118,9 +110,8 @@ fun AddEditProductScreen(
             TopAppBar(
                 title = {
                     Text(
-                        if (isEditMode) "Редактировать" else "Добавить продукт",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold
+                        if (isEditMode) "Редактировать" else "Новый продукт",
+                        style = MaterialTheme.typography.titleLarge
                     )
                 },
                 navigationIcon = {
@@ -129,93 +120,114 @@ fun AddEditProductScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onSurface
                 )
             )
-        },
+        }
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
-                .background(MaterialTheme.colorScheme.background)
-                .padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .padding(horizontal = 16.dp, vertical = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             ImagePickerButton(
                 selectedImageUri = imageUri,
                 onImageSelected = { uri ->
                     imageUri = uri
-                    if (errorMessage != null) errorMessage = null
+                    errorMessage = null
                 }
             )
 
             OutlinedTextField(
                 modifier = Modifier.fillMaxWidth(),
                 value = name,
-                onValueChange = { 
-                    name = it
-                    if (errorMessage != null) errorMessage = null
-                },
+                onValueChange = { name = it; errorMessage = null },
                 label = { Text("Название продукта") },
-                placeholder = { Text("Молоко, Хлеб...") },
                 singleLine = true,
+                isError = errorMessage != null && name.trim().isEmpty(),
+                supportingText = {
+                    if (errorMessage != null && name.trim().isEmpty())
+                        Text(errorMessage!!)
+                },
                 shape = RoundedCornerShape(12.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
-                ),
-                isError = errorMessage != null && name.trim().isEmpty()
+                leadingIcon = {
+                    Icon(Icons.Default.ShoppingCart, contentDescription = null)
+                }
             )
 
-            Row (
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = if (errorMessage != null && expiryDate == null)
+                        MaterialTheme.colorScheme.errorContainer
+                    else
+                        MaterialTheme.colorScheme.surfaceVariant
+                )
             ) {
-                ExpiryDatePicker(
-                    selectedDateMillis = expiryDate
-                ) { millis ->
-                    expiryDate = millis
-                    if (errorMessage != null) errorMessage = null
-                }
-                Spacer(Modifier.width(20.dp))
-                if (expiryDate != null) {
-                    Text(
-                        text = "Дата истечения срока годности: ${formatDate(expiryDate!!)}",
-                        fontSize = 16.sp,
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.SemiBold
-                    )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.Default.CalendarMonth,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                            Text(
+                                "Срок годности",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                if (expiryDate != null) formatDate(expiryDate!!) else "Не выбрано",
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                    }
+                    ExpiryDatePicker(selectedDateMillis = expiryDate) { millis ->
+                        expiryDate = millis
+                        errorMessage = null
+                    }
                 }
             }
 
-
-            if (errorMessage != null) {
+            if (errorMessage != null && expiryDate == null) {
                 Text(
-                    text = errorMessage!!,
-                    color = Color.Red,
-                    fontSize = 16.sp,
+                    errorMessage!!,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(start = 4.dp)
                 )
             }
+
+
+            Spacer(Modifier.weight(1f))
 
             Button(
                 onClick = ::onSubmit,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(48.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant
-                )
+                    .height(52.dp),
+                shape = RoundedCornerShape(12.dp)
             ) {
                 Text(
-                    text = if (isEditMode) "Сохранить" else "Добавить",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold
+                    if (isEditMode) "Сохранить" else "Добавить",
+                    style = MaterialTheme.typography.labelLarge
                 )
             }
 
@@ -223,23 +235,16 @@ fun AddEditProductScreen(
                 onClick = onNavigateBack,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(48.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = MaterialTheme.colorScheme.primary
-                )
+                    .height(52.dp),
+                shape = RoundedCornerShape(12.dp)
             ) {
-                Text(
-                    text = "Отмена",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
+                Text("Отмена", style = MaterialTheme.typography.labelLarge)
             }
         }
+
     }
 }
-
-private fun formatDate(timeMillis: Long): String {
+private   fun formatDate(timeMillis: Long): String {
     val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.forLanguageTag("ru-RU"))
     return dateFormat.format(Date(timeMillis))
 }
