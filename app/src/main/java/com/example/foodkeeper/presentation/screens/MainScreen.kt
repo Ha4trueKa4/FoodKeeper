@@ -1,8 +1,10 @@
 package com.example.foodkeeper.presentation.screens
 
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Logout
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -35,10 +37,9 @@ import org.koin.androidx.compose.koinViewModel
 fun MainScreen(
     modifier: Modifier = Modifier,
     viewModel: FoodKeeperViewModel = koinViewModel(),
-    authViewModel: AuthViewModel = koinViewModel(),
     onEdit : (String) -> Unit,
     onAdd : () -> Unit,
-    onLogout: () -> Unit = {}
+    onSettings : () -> Unit
 ) {
     val products by viewModel.products.collectAsState()
     val pendingDeleteProduct by viewModel.pendingDeleteProduct.collectAsState()
@@ -76,11 +77,10 @@ fun MainScreen(
             TopAppBar(
                 title = { Text("FoodKeeper") },
                 actions = {
-                    IconButton(onClick = {
-                        authViewModel.signOut()
-                        onLogout()
-                    }) {
-                        Icon(Icons.Default.Logout, contentDescription = "Выйти из аккаунта")
+                    Row {
+                        IconButton(onClick = { onSettings() }) {
+                            Icon(Icons.Default.Settings, contentDescription = "Настройки")
+                        }
                     }
                 }
             )

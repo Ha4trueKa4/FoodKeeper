@@ -14,4 +14,7 @@ sealed class Routes {
 
     @Serializable
     data class Edit(val firebaseId: String) : Routes()
+
+    @Serializable
+    data object Settings : Routes()
 }

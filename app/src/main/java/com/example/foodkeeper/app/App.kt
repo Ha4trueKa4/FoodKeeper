@@ -15,6 +15,7 @@ import com.example.foodkeeper.di.roomModule
 import com.example.foodkeeper.di.useCaseModule
 import com.example.foodkeeper.di.viewModelModule
 import com.example.foodkeeper.data.local.fb.SyncWorker
+import com.example.foodkeeper.di.settingsModule
 import com.example.foodkeeper.presentation.notifications.ExpiryCheckWorker
 import com.example.foodkeeper.presentation.notifications.ExpiryNotificationManager
 import org.koin.android.ext.koin.androidContext
@@ -38,7 +39,8 @@ class App : Application() {
                 useCaseModule,
                 authModule,
                 firebaseModule,
-                firestoreModule
+                firestoreModule,
+                settingsModule
             ))
         }
 

@@ -13,6 +13,7 @@ import androidx.navigation.toRoute
 import com.example.foodkeeper.presentation.screens.AddEditProductScreen
 import com.example.foodkeeper.presentation.screens.AuthScreen
 import com.example.foodkeeper.presentation.screens.MainScreen
+import com.example.foodkeeper.presentation.screens.SettingsScreen
 
 @Composable
 fun FoodKeeperNavigation(
@@ -42,11 +43,10 @@ fun FoodKeeperNavigation(
                 onEdit = { firebaseId ->
                     navHostController.navigate(Routes.Edit(firebaseId))
                 },
-                onLogout = {
-                    navHostController.navigate(Routes.Auth) {
-                        popUpTo(0) { inclusive = true }
-                    }
+                onSettings = {
+                    navHostController.navigate(Routes.Settings)
                 }
+
             )
         }
 
@@ -69,6 +69,17 @@ fun FoodKeeperNavigation(
                     launchSingleTop = true
                 }
             }
+        }
+
+        composable<Routes.Settings> {
+            SettingsScreen(
+                onBack = { navHostController.popBackStack() },
+                onLogout = {
+                    navHostController.navigate(Routes.Auth) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
+            )
         }
     }
 }

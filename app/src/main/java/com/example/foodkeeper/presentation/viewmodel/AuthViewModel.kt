@@ -21,6 +21,9 @@ class AuthViewModel(
     private val _authState = MutableStateFlow<AuthState>(AuthState.Unauthenticated)
     val authState = _authState
 
+    val userEmail: String
+        get() = auth.currentUser?.email ?: ""
+
     init {
         checkAuthStatus()
     }

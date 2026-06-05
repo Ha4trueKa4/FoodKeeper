@@ -76,4 +76,5 @@ dependencies {
     implementation(libs.firebase.firestore.ktx)
     implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.lottie.compose)
+    implementation(libs.androidx.datastore.preferences)
 }
