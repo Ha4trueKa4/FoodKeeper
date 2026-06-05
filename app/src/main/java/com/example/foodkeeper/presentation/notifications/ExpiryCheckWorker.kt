@@ -7,6 +7,7 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.example.foodkeeper.domain.Product
 import com.example.foodkeeper.domain.usecases.GetProductsUseCase
+import kotlinx.coroutines.flow.first
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.time.Instant
@@ -20,54 +21,47 @@ class ExpiryCheckWorker(context: Context, params: WorkerParameters) :
     CoroutineWorker(context, params), KoinComponent {
 
     private val getProductsUseCase: GetProductsUseCase by inject()
-    private val notificationManager = ExpiryNotificationManager
 
     @RequiresApi(Build.VERSION_CODES.O)
     override suspend fun doWork(): Result {
         return try {
-
-            getProductsUseCase.execute().collect { products ->
-                if (!products.isEmpty()) {
-                    checkAndNotifyExpiringProducts(products)
-                }
-            }
-            Result.retry()
+            val products = getProductsUseCase.execute().first()
+            checkAndNotify(products)
+            Result.success()
         } catch (e: Exception) {
-            Result.retry()
+            Result.failure()
         }
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun checkAndNotifyExpiringProducts(products: List<Product>) {
+    private fun checkAndNotify(products: List<Product>) {
         val today = LocalDate.now()
 
-        val expiringProducts = mutableListOf<String>()
-
-        products.forEach { product ->
-
-            val expiryDateLocal = Instant
-                .ofEpochMilli(product.expiryDate)
+        val expiring = products.mapNotNull { product ->
+            val expiryDate = Instant.ofEpochMilli(product.expiryDate)
                 .atZone(ZoneId.systemDefault())
                 .toLocalDate()
-
-            val daysLeft = ChronoUnit.DAYS.between(today, expiryDateLocal).toInt()
-
-            if (daysLeft <= 3) {
-                notificationManager.showExpiryNotification(
-                    applicationContext,
-                    productName = product.name,
-                    daysLeft = daysLeft
-                )
-                expiringProducts.add(product.name)
-            }
+            val daysLeft = ChronoUnit.DAYS.between(today, expiryDate).toInt()
+            if (daysLeft <= 3) Pair(product.name, daysLeft) else null
         }
 
-        if (expiringProducts.size > 1) {
-            notificationManager.showMultipleExpiryNotification(
-                applicationContext,
-                expiringProducts,
-                expiringProducts.size
-            )
+        when {
+            expiring.isEmpty() -> return
+
+            expiring.size == 1 -> {
+                val (name, daysLeft) = expiring.first()
+                ExpiryNotificationManager.showExpiryNotification(
+                    applicationContext, name, daysLeft
+                )
+            }
+
+            else -> {
+                ExpiryNotificationManager.showMultipleExpiryNotification(
+                    applicationContext,
+                    expiring.map { it.first },
+                    expiring.size
+                )
+            }
         }
     }
 }

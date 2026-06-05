@@ -8,4 +8,10 @@ data class Product(
     var expiryDate: Long = 0L,
     var imageUrl: String = "",
     val userId: String = "",
+    val category: Category = Category.OTHER,
+    val quantity: Float = 1f,
+    val unit: Units = Units.PCS,
+    val openedDate: Long? = null,
+    val storageLocation: StorageLocation = StorageLocation.FRIDGE,
+    val notes: String = ""
 )
