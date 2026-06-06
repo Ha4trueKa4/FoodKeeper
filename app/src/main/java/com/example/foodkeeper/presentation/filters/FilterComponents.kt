@@ -1,7 +1,10 @@
 package com.example.foodkeeper.presentation.filters
 
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -23,8 +26,9 @@ fun FilterBottomSheet(
         Column(
             modifier = Modifier
                 .padding(horizontal = 16.dp)
-                .padding(bottom = 32.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .padding(bottom = 16.dp)
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text("Фильтры", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
 
@@ -67,15 +71,12 @@ fun FilterBottomSheet(
                     onCheckedChange = { onFilterChange(filter.copy(showExpired = it)) }
                 )
             }
-
-            // Сброс
-            if (filter.isActive) {
-                OutlinedButton(
-                    onClick = { onReset() },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Сбросить фильтры")
-                }
+            OutlinedButton(
+                onClick = { onReset() },
+                modifier = Modifier.fillMaxWidth(),
+                enabled = filter.isActive
+            ) {
+                Text("Сбросить фильтры")
             }
         }
     }
@@ -98,11 +99,11 @@ private fun <T> SingleChoiceChipRow(
     label: (T) -> String,
     onSelect: (T) -> Unit
 ) {
-    androidx.compose.foundation.lazy.LazyRow(
+    Row(
+        modifier = Modifier.horizontalScroll(rememberScrollState()),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        items(options.size) { index ->
-            val option = options[index]
+        options.forEach { option ->
             FilterChip(
                 selected = selected == option,
                 onClick = { onSelect(option) },

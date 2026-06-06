@@ -51,11 +51,16 @@ class ProductRepositoryImpl(
         val remoteProducts = firestore.getAllProducts()
         val remoteIds = remoteProducts.map { it.firebaseId }.toSet()
 
-        remoteProducts.forEach {
-            productDao.insertOrReplace(it.toEntity())
+        val localProducts = productDao.getAllProducts().first()
+        val localMap = localProducts.associateBy { it.firebaseId }
+
+        remoteProducts.forEach {remote ->
+            val local = localMap[remote.firebaseId]
+            if (local == null || local != remote.toEntity()) {
+                productDao.insertOrReplace(remote.toEntity())
+            }
         }
 
-        val localProducts = productDao.getAllProducts().first()
         localProducts.forEach { local ->
             if (local.firebaseId !in remoteIds) {
                 productDao.deleteProduct(local.firebaseId)

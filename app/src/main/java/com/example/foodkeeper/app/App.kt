@@ -74,11 +74,13 @@ class App : Application() {
         }
 
         scheduleFirestoreSync()
+        /*
         val testRequest = OneTimeWorkRequestBuilder<ExpiryCheckWorker>().setInputData(
             androidx.work.Data.Builder()
                 .build()
         ).build()
         WorkManager.getInstance(this).enqueue(testRequest)
+        */
     }
 
     @RequiresApi(Build.VERSION_CODES.O)

@@ -21,6 +21,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -35,6 +36,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.foodkeeper.presentation.components.AddProductFloatingActionButton
 import com.example.foodkeeper.presentation.components.ProductList
+import com.example.foodkeeper.presentation.components.TimedSnackbar
 import com.example.foodkeeper.presentation.filters.FilterBottomSheet
 import com.example.foodkeeper.presentation.navigation.Routes
 import com.example.foodkeeper.presentation.viewmodel.AuthViewModel
@@ -69,13 +71,21 @@ fun MainScreen(
                 message = "${product.name} будет удалён",
                 actionLabel = "Отменить",
                 duration = SnackbarDuration.Indefinite,
-                withDismissAction = false
+
             )
             if (result == SnackbarResult.ActionPerformed) {
                 viewModel.cancelDelete()
             } else {
                 viewModel.confirmDelete()
             }
+        }
+    }
+
+    LaunchedEffect(pendingDeleteProduct) {
+        if (pendingDeleteProduct != null) {
+            delay(5000)
+            snackBarHostState.currentSnackbarData?.dismiss()
+            viewModel.confirmDelete()
         }
     }
 
@@ -93,50 +103,42 @@ fun MainScreen(
                             Icon(Icons.Default.FilterList, contentDescription = "Фильтры")
                         }
                     }
-                    IconButton(
-                        onClick = { viewModel.syncNow() },
-                        enabled = !isSyncing
-                    ) {
-                        if (isSyncing) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(20.dp),
-                                strokeWidth = 2.dp
-                            )
-                        } else {
-                            Icon(Icons.Default.Sync, contentDescription = "Синхронизировать")
-                        }
-                    }
                     IconButton(onClick = { onSettings() }) {
                         Icon(Icons.Default.Settings, contentDescription = "Настройки")
                     }
                 }
             )
         },
-        snackbarHost = {
-            SnackbarHost(hostState = snackBarHostState)
-        },
+        snackbarHost = {SnackbarHost(hostState = snackBarHostState) { data ->
+            TimedSnackbar(snackbarData = data)
+        }},
         floatingActionButton = {
             AddProductFloatingActionButton {
                 onAdd()
             }
         }
     ) { innerPadding ->
-        ProductList(
-            modifier = Modifier.padding(innerPadding),
-            products = products,
-            isLoading = isLoadingList,
-            onDelete = { firebaseId ->
-                val productToDelete = products.find { it.firebaseId == firebaseId }
-                productToDelete?.let {
-                    viewModel.requestDelete(it)
-                }
-            },
-            onEdit = { firebaseId ->
-                onEdit(firebaseId)
-            },
-            pendingDeleteProductId = pendingDeleteProduct?.firebaseId
-        )
-
+        PullToRefreshBox(
+            isRefreshing = isSyncing,
+            onRefresh = { viewModel.syncNow() },
+            modifier = Modifier.padding(innerPadding)
+        ) {
+            ProductList(
+                modifier = Modifier,
+                products = products,
+                isLoading = isLoadingList,
+                onDelete = { firebaseId ->
+                    val productToDelete = products.find { it.firebaseId == firebaseId }
+                    productToDelete?.let {
+                        viewModel.requestDelete(it)
+                    }
+                },
+                onEdit = { firebaseId ->
+                    onEdit(firebaseId)
+                },
+                pendingDeleteProductId = pendingDeleteProduct?.firebaseId
+            )
+        }
     }
 
     if (showFilterSheet) {

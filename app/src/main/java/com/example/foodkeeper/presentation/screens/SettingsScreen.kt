@@ -23,7 +23,7 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun SettingsScreen(
     onBack: () -> Unit,
-    onLogout: () -> Unit,
+    onLogout : () -> Unit,
     settingsViewModel: SettingsViewModel = koinViewModel(),
     authViewModel: AuthViewModel = koinViewModel()
 ) {
@@ -134,6 +134,7 @@ fun SettingsScreen(
                     onClick = {
                         authViewModel.signOut()
                         onLogout()
+                        showLogoutDialog = false
                     },
                     colors = ButtonDefaults.textButtonColors(
                         contentColor = MaterialTheme.colorScheme.error

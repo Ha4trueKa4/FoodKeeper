@@ -1,8 +1,13 @@
 package com.example.foodkeeper.presentation.navigation
 
+import android.app.Activity
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.Lifecycle
+import androidx.navigation.NavDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -11,7 +16,9 @@ import com.example.foodkeeper.presentation.screens.AddEditProductScreen
 import com.example.foodkeeper.presentation.screens.AuthScreen
 import com.example.foodkeeper.presentation.screens.MainScreen
 import com.example.foodkeeper.presentation.screens.SettingsScreen
-import com.example.foodkeeper.presentation.navigation.Routes
+import com.example.foodkeeper.presentation.viewmodel.FoodKeeperViewModel
+import com.google.firebase.auth.FirebaseAuth
+import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun FoodKeeperNavigation(
@@ -20,42 +27,31 @@ fun FoodKeeperNavigation(
 ) {
     NavHost(
         navController = navHostController,
-        startDestination = Routes.Auth
+        startDestination = if (FirebaseAuth.getInstance().currentUser != null) Routes.Main else Routes.Auth
     ) {
-
         composable<Routes.Add> {
-            AddEditProductScreen(
-                productId = null
-            ) {
-                val navBackStackEntry = navHostController.currentBackStackEntry
-                if (navBackStackEntry?.lifecycle?.currentState == Lifecycle.State.RESUMED) {
-                    navHostController.popBackStack()
-                }
+            AddEditProductScreen(productId = null) {
+                navHostController.popBackStack()
             }
         }
+
         composable<Routes.Main> {
+            val viewModel: FoodKeeperViewModel = koinViewModel()
+
+            LaunchedEffect(Unit) {
+                viewModel.syncNow()
+            }
             MainScreen(
-                onAdd = {
-                    navHostController.navigate(Routes.Add)
-                },
-                onEdit = { firebaseId ->
-                    navHostController.navigate(Routes.Edit(firebaseId))
-                },
-                onSettings = {
-                    navHostController.navigate(Routes.Settings)
-                }
+                onAdd = { navHostController.navigate(Routes.Add) },
+                onEdit = { firebaseId -> navHostController.navigate(Routes.Edit(firebaseId)) },
+                onSettings = { navHostController.navigate(Routes.Settings) }
             )
         }
 
         composable<Routes.Edit> { backStackEntry ->
             val route = backStackEntry.toRoute<Routes.Edit>()
-            AddEditProductScreen(
-                productId = route.firebaseId
-            ) {
-                val navBackStackEntry = navHostController.currentBackStackEntry
-                if (navBackStackEntry?.lifecycle?.currentState == Lifecycle.State.RESUMED) {
-                    navHostController.popBackStack()
-                }
+            AddEditProductScreen(productId = route.firebaseId) {
+                navHostController.popBackStack()
             }
         }
 

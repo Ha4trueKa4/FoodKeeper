@@ -3,11 +3,14 @@ package com.example.foodkeeper.presentation.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.foodkeeper.data.local.ProductRepositoryImpl
+import com.example.foodkeeper.data.local.SettingsRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.FirebaseAuthWeakPasswordException
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withTimeoutOrNull
@@ -15,18 +18,20 @@ import kotlin.time.Duration.Companion.seconds
 
 class AuthViewModel(
     private val auth: FirebaseAuth,
-    private val repository: ProductRepositoryImpl
+    private val repository: ProductRepositoryImpl,
 ) : ViewModel() {
 
-    private val _authState = MutableStateFlow<AuthState>(AuthState.Unauthenticated)
-    val authState = _authState
 
-    val userEmail: String
-        get() = auth.currentUser?.email ?: ""
+
+    private val _authState = MutableStateFlow<AuthState>(AuthState.Loading)
+    val authState = _authState
 
     init {
         checkAuthStatus()
     }
+
+    val userEmail: String
+        get() = auth.currentUser?.email ?: ""
 
     fun checkAuthStatus() {
         if (auth.currentUser == null) {
@@ -90,14 +95,9 @@ class AuthViewModel(
 
     fun signOut() {
         viewModelScope.launch {
-            try {
-                clearAllProducts()
-                auth.signOut()
-                _authState.value = AuthState.Unauthenticated
-            } catch (e: Exception) {
-                auth.signOut()
-                _authState.value = AuthState.Unauthenticated
-            }
+            clearAllProducts()
+            auth.signOut()
+            _authState.value = AuthState.Unauthenticated
         }
     }
 

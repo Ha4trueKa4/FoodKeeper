@@ -80,4 +80,5 @@ dependencies {
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.firebase.storage.ktx)
     implementation(libs.cloudinary.android)
+    implementation(libs.androidx.core.splashscreen)
 }
