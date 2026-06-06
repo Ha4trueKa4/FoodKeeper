@@ -3,8 +3,11 @@ package com.example.foodkeeper.presentation.screens
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -19,12 +22,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.foodkeeper.presentation.components.AddProductFloatingActionButton
 import com.example.foodkeeper.presentation.components.ProductList
+import com.example.foodkeeper.presentation.filters.FilterBottomSheet
 import com.example.foodkeeper.presentation.navigation.Routes
 import com.example.foodkeeper.presentation.viewmodel.AuthViewModel
 import com.example.foodkeeper.presentation.viewmodel.FoodKeeperViewModel
@@ -43,32 +50,26 @@ fun MainScreen(
 ) {
     val products by viewModel.products.collectAsState()
     val pendingDeleteProduct by viewModel.pendingDeleteProduct.collectAsState()
-
     val isLoadingList by viewModel.isLoadingList.collectAsState()
+    val filter by viewModel.filter.collectAsState()
 
+    var showFilterSheet by rememberSaveable { mutableStateOf(false) }
     val snackBarHostState = remember { SnackbarHostState() }
-
-    val visibleProducts = products
 
     LaunchedEffect(pendingDeleteProduct) {
         pendingDeleteProduct?.let { product ->
             snackBarHostState.currentSnackbarData?.dismiss()
-            val job = launch {
-                val result = snackBarHostState.showSnackbar(
-                    message = "${product.name} будет удалён",
-                    actionLabel = "Отменить",
-                    duration = SnackbarDuration.Indefinite,
-                    withDismissAction = false
-                )
-                if (result == SnackbarResult.ActionPerformed) {
-                    viewModel.cancelDelete()
-                }
+            val result = snackBarHostState.showSnackbar(
+                message = "${product.name} будет удалён",
+                actionLabel = "Отменить",
+                duration = SnackbarDuration.Indefinite,
+                withDismissAction = false
+            )
+            if (result == SnackbarResult.ActionPerformed) {
+                viewModel.cancelDelete()
+            } else {
+                viewModel.confirmDelete()
             }
-            delay(3000)
-
-            job.cancel()
-            snackBarHostState.currentSnackbarData?.dismiss()
-            viewModel.confirmDelete()
         }
     }
 
@@ -77,10 +78,17 @@ fun MainScreen(
             TopAppBar(
                 title = { Text("FoodKeeper") },
                 actions = {
-                    Row {
-                        IconButton(onClick = { onSettings() }) {
-                            Icon(Icons.Default.Settings, contentDescription = "Настройки")
+                    BadgedBox(
+                        badge = {
+                            if (filter.isActive) Badge()
                         }
+                    ) {
+                        IconButton(onClick = { showFilterSheet = true }) {
+                            Icon(Icons.Default.FilterList, contentDescription = "Фильтры")
+                        }
+                    }
+                    IconButton(onClick = { onSettings() }) {
+                        Icon(Icons.Default.Settings, contentDescription = "Настройки")
                     }
                 }
             )
@@ -96,7 +104,7 @@ fun MainScreen(
     ) { innerPadding ->
         ProductList(
             modifier = Modifier.padding(innerPadding),
-            products = visibleProducts,
+            products = products,
             isLoading = isLoadingList,
             onDelete = { firebaseId ->
                 val productToDelete = products.find { it.firebaseId == firebaseId }
@@ -108,6 +116,16 @@ fun MainScreen(
                 onEdit(firebaseId)
             },
             pendingDeleteProductId = pendingDeleteProduct?.firebaseId
+        )
+
+    }
+
+    if (showFilterSheet) {
+        FilterBottomSheet(
+            filter = filter,
+            onFilterChange = { viewModel.setFilter(it) },
+            onReset = { viewModel.resetFilter() },
+            onDismiss = { showFilterSheet = false }
         )
     }
 }
