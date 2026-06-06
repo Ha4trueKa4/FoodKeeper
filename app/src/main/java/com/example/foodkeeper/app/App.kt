@@ -7,7 +7,10 @@ import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
+import coil3.ImageLoader
+import coil3.SingletonImageLoader
 import com.example.foodkeeper.data.local.SettingsRepository
+import com.example.foodkeeper.data.local.fb.ImageStorageDataSource
 import com.example.foodkeeper.di.authModule
 import com.example.foodkeeper.di.firebaseModule
 import com.example.foodkeeper.di.firestoreModule
@@ -39,7 +42,7 @@ class App : Application() {
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate() {
         super.onCreate()
-        
+
         startKoin {
             androidContext(this@App)
             modules(listOf(
@@ -54,13 +57,21 @@ class App : Application() {
             ))
         }
 
+        val imageLoader = ImageLoader.Builder(this)
+            .components {
+                add(coil3.network.okhttp.OkHttpNetworkFetcherFactory())
+            }
+            .build()
+        SingletonImageLoader.setSafe { imageLoader }
+
+        ImageStorageDataSource.init(this)
+
         ExpiryNotificationManager.createNotificationChannel(this)
 
         appScope.launch {
             val notifyDays = SettingsRepository(this@App).notifyDays.first()
             scheduleExpiryCheck(notifyDays)
         }
-
 
         scheduleFirestoreSync()
         val testRequest = OneTimeWorkRequestBuilder<ExpiryCheckWorker>().setInputData(

@@ -5,6 +5,7 @@ import androidx.room.Room
 import com.example.foodkeeper.data.local.FoodKeeperDatabase
 import com.example.foodkeeper.data.local.ProductRepositoryImpl
 import com.example.foodkeeper.data.local.SettingsRepository
+import com.example.foodkeeper.data.local.fb.ImageStorageDataSource
 import com.example.foodkeeper.data.local.fb.ProductFirestoreDataSource
 import com.example.foodkeeper.domain.repository.ProductRepository
 import com.example.foodkeeper.domain.usecases.AddProductUseCase
@@ -19,6 +20,7 @@ import com.example.foodkeeper.presentation.viewmodel.FoodKeeperViewModel
 import com.example.foodkeeper.presentation.viewmodel.SettingsViewModel
 import com.google.firebase.auth.FirebaseAuth
 import org.koin.android.ext.koin.androidApplication
+import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 
@@ -97,10 +99,8 @@ val firebaseModule = module {
 }
 
 val firestoreModule = module {
-
-    single {
-        ProductFirestoreDataSource(get())
-    }
+    single { ProductFirestoreDataSource(get()) }
+    single { ImageStorageDataSource(androidContext()) }
 }
 
 val settingsModule = module {

@@ -70,6 +70,7 @@ dependencies {
     implementation(libs.koin.android)
     implementation(libs.koin.androidx.compose)
     implementation(libs.coil.compose)
+    implementation(libs.coil.network.okhttp)
     implementation(libs.androidx.work.runtime.ktx)
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth.ktx)
@@ -77,4 +78,6 @@ dependencies {
     implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.lottie.compose)
     implementation(libs.androidx.datastore.preferences)
+    implementation(libs.firebase.storage.ktx)
+    implementation(libs.cloudinary.android)
 }

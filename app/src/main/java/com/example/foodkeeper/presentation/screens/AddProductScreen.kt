@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -23,6 +24,7 @@ import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -37,6 +39,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -57,10 +60,12 @@ import java.util.Date
 import java.util.Locale
 import java.util.UUID
 import androidx.core.net.toUri
+import com.example.foodkeeper.data.local.fb.ImageStorageDataSource
 import com.example.foodkeeper.domain.Category
 import com.example.foodkeeper.domain.StorageLocation
 import com.example.foodkeeper.domain.Units
 import com.example.foodkeeper.presentation.components.DropdownField
+import org.koin.compose.koinInject
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -73,7 +78,7 @@ fun AddEditProductScreen(
     val isEditMode = productId != null
     var name by rememberSaveable { mutableStateOf("") }
     var expiryDate by rememberSaveable { mutableStateOf<Long?>(null) }
-    var imageUri by rememberSaveable { mutableStateOf<Uri?>(null) }
+    var imageUri by remember { mutableStateOf<Uri?>(null) }
     var errorMessage by rememberSaveable { mutableStateOf<String?>(null) }
     var category by rememberSaveable { mutableStateOf(Category.OTHER) }
     var quantity by rememberSaveable { mutableStateOf("1") }
@@ -81,6 +86,8 @@ fun AddEditProductScreen(
     var storageLocation by rememberSaveable { mutableStateOf(StorageLocation.FRIDGE) }
     var notes by rememberSaveable { mutableStateOf("") }
     var openedDate by rememberSaveable { mutableStateOf<Long?>(null) }
+
+    val imageStorage: ImageStorageDataSource = koinInject()
 
     LaunchedEffect(productId) {
         if (productId != null) {
@@ -100,29 +107,48 @@ fun AddEditProductScreen(
     }
 
     val coroutineScope = rememberCoroutineScope()
+    var isLoading by remember { mutableStateOf(false) }
 
     fun onSubmit() {
+        if (isLoading) return
         val trimmedName = name.trim()
         if (trimmedName.isEmpty()) { errorMessage = "Введите название продукта"; return }
         if (expiryDate == null) { errorMessage = "Выберите дату"; return }
         val userId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
-        val product = Product(
-            firebaseId = if (isEditMode) productId!! else UUID.randomUUID().toString(),
-            name = trimmedName,
-            expiryDate = expiryDate!!,
-            imageUrl = imageUri?.toString() ?: "",
-            userId = userId,
-            category = category,
-            quantity = quantity.toFloatOrNull() ?: 1f,
-            unit = unit,
-            storageLocation = storageLocation,
-            notes = notes.trim(),
-            openedDate = openedDate
-        )
+
+        isLoading = true
         coroutineScope.launch {
-            if (isEditMode) viewModel.updateProduct(product)
-            else viewModel.addProductAndAwait(product)
-            onNavigateBack()
+            try {
+                val finalImageUrl = if (imageUri != null && !imageUri.toString().startsWith("https://")) {
+                    try {
+                        imageStorage.uploadImage(imageUri!!)
+                    } catch (e: Exception) {
+                        imageUri?.toString() ?: ""
+                    }
+                } else {
+                    imageUri?.toString() ?: ""
+                }
+
+                val product = Product(
+                    firebaseId = if (isEditMode) productId!! else UUID.randomUUID().toString(),
+                    name = trimmedName,
+                    expiryDate = expiryDate!!,
+                    imageUrl = finalImageUrl,
+                    userId = userId,
+                    category = category,
+                    quantity = quantity.toFloatOrNull() ?: 1f,
+                    unit = unit,
+                    storageLocation = storageLocation,
+                    notes = notes.trim(),
+                    openedDate = openedDate
+                )
+
+                if (isEditMode) viewModel.updateProduct(product)
+                else viewModel.addProductAndAwait(product)
+                onNavigateBack()
+            } finally {
+                isLoading = false
+            }
         }
     }
 
@@ -315,10 +341,19 @@ fun AddEditProductScreen(
 
             Button(
                 onClick = ::onSubmit,
+                enabled = !isLoading,
                 modifier = Modifier.fillMaxWidth().height(52.dp),
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Text(if (isEditMode) "Сохранить" else "Добавить", style = MaterialTheme.typography.labelLarge)
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        strokeWidth = 2.dp,
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                } else {
+                    Text(if (isEditMode) "Сохранить" else "Добавить", style = MaterialTheme.typography.labelLarge)
+                }
             }
 
             OutlinedButton(
