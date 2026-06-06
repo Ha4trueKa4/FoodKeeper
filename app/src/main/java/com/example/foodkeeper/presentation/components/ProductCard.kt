@@ -8,6 +8,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -17,6 +18,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -84,13 +86,12 @@ fun ProductCard(
             .height(130.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh)
     ) {
-        Column(modifier = Modifier.alpha(cardAlpha)) {
+        Column(modifier = Modifier.alpha(cardAlpha).fillMaxSize()) {
             Row(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
+                    .fillMaxSize()
             ) {
                 // Изображение
                 Box(
@@ -193,11 +194,21 @@ fun ProductCard(
                     // Чипы
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(6.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        InfoChip("${product.category.emoji} ${product.category.displayName}")
-                        InfoChip("${product.storageLocation.emoji} ${product.storageLocation.displayName}")
-                        InfoChip("${formatQuantity(product.quantity)} ${product.unit.displayName}")
+                        InfoChip(
+                            text = "${product.category.emoji} ${product.category.displayName}",
+                            modifier = Modifier.widthIn(max = 110.dp)
+                        )
+                        InfoChip(
+                            text = "${product.storageLocation.emoji} ${product.storageLocation.displayName}",
+                            modifier = Modifier.widthIn(max = 110.dp)
+                        )
+                        InfoChip(
+                            text = "${formatQuantity(product.quantity)} ${product.unit.displayName}",
+                            modifier = Modifier.widthIn(max = 80.dp)
+                        )
                     }
 
                     // Заметка
@@ -217,9 +228,9 @@ fun ProductCard(
 }
 
 @Composable
-private fun InfoChip(text: String) {
+private fun InfoChip(text: String, modifier: Modifier = Modifier) {
     Box(
-        modifier = Modifier
+        modifier = modifier
             .clip(RoundedCornerShape(8.dp))
             .background(MaterialTheme.colorScheme.secondaryContainer)
             .padding(horizontal = 8.dp, vertical = 4.dp)
@@ -228,7 +239,8 @@ private fun InfoChip(text: String) {
             text = text,
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSecondaryContainer,
-            maxLines = 1
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
         )
     }
 }

@@ -18,6 +18,7 @@ import com.example.foodkeeper.presentation.viewmodel.AuthViewModel
 import com.example.foodkeeper.presentation.viewmodel.FoodKeeperViewModel
 import com.example.foodkeeper.presentation.viewmodel.SettingsViewModel
 import com.google.firebase.auth.FirebaseAuth
+import org.koin.android.ext.koin.androidApplication
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 
@@ -104,5 +105,5 @@ val firestoreModule = module {
 
 val settingsModule = module {
     single { SettingsRepository(get()) }
-    viewModel { SettingsViewModel(get()) }
+    viewModel { SettingsViewModel(get(), androidApplication()) }
 }

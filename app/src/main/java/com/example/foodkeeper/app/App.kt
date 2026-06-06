@@ -7,6 +7,7 @@ import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
+import com.example.foodkeeper.data.local.SettingsRepository
 import com.example.foodkeeper.di.authModule
 import com.example.foodkeeper.di.firebaseModule
 import com.example.foodkeeper.di.firestoreModule
@@ -18,6 +19,12 @@ import com.example.foodkeeper.data.local.fb.SyncWorker
 import com.example.foodkeeper.di.settingsModule
 import com.example.foodkeeper.presentation.notifications.ExpiryCheckWorker
 import com.example.foodkeeper.presentation.notifications.ExpiryNotificationManager
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.GlobalContext.startKoin
 import java.time.LocalDateTime
@@ -26,6 +33,9 @@ import java.util.concurrent.TimeUnit
 
 
 class App : Application() {
+
+    private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate() {
         super.onCreate()
@@ -46,24 +56,38 @@ class App : Application() {
 
         ExpiryNotificationManager.createNotificationChannel(this)
 
-        scheduleExpiryCheck()
+        appScope.launch {
+            val notifyDays = SettingsRepository(this@App).notifyDays.first()
+            scheduleExpiryCheck(notifyDays)
+        }
+
+
         scheduleFirestoreSync()
-        //val testRequest = OneTimeWorkRequestBuilder<ExpiryCheckWorker>().build()
-        //WorkManager.getInstance(this).enqueue(testRequest)
+        val testRequest = OneTimeWorkRequestBuilder<ExpiryCheckWorker>().setInputData(
+            androidx.work.Data.Builder()
+                .build()
+        ).build()
+        WorkManager.getInstance(this).enqueue(testRequest)
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun scheduleExpiryCheck() {
+    fun scheduleExpiryCheck(notifyDays : Int) {
+
+        val data = androidx.work.Data.Builder()
+            .putInt("notify_days", notifyDays)
+            .build()
+
         val expiryCheckRequest = PeriodicWorkRequestBuilder<ExpiryCheckWorker>(
             repeatInterval = 24,
             repeatIntervalTimeUnit = TimeUnit.HOURS
         )
             .setInitialDelay(calculateDelayUntil8am(), TimeUnit.MILLISECONDS)
+            .setInputData(data)
             .build()
 
         WorkManager.getInstance(this).enqueueUniquePeriodicWork(
             "expiry_check",
-            ExistingPeriodicWorkPolicy.KEEP,
+            ExistingPeriodicWorkPolicy.UPDATE,
             expiryCheckRequest
         )
     }

@@ -33,94 +33,77 @@ object ExpiryNotificationManager {
 
     }
 
-    fun showExpiryNotification(
+    fun showExpiredNotification(
         context: Context,
-        productName : String,
-        daysLeft : Int
-    ) {
-        val intent = Intent(context, MainActivity::class.java). apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-        }
-
-        val pendingIntent = PendingIntent.getActivity(
-            context,
-            0,
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-
-        val titleText = when {
-            daysLeft < 0 -> "⚠️ Продукт истёк!"
-            daysLeft == 0 -> "⚠️ Последний день!"
-            daysLeft <= 3 -> "⏰ Скоро испортится!"
-            else -> "📢 Проверка сроков"
-        }
-
-        val messageText = when {
-            daysLeft < 0 -> "$productName истёк ${ Math.abs(daysLeft)} дней назад"
-            daysLeft == 0 -> "$productName истекает СЕГОДНЯ!"
-            daysLeft == 1 -> "$productName испортится завтра"
-            else -> "$productName испортится через $daysLeft дней"
-        }
-
-        val notification = NotificationCompat.Builder(context, NOTIFICATION_CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
-            .setContentTitle(titleText)
-            .setContentText(messageText)
-            .setStyle(NotificationCompat.BigTextStyle().bigText(messageText))
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setContentIntent(pendingIntent)
-            .setAutoCancel(true)
-            .setVibrate(longArrayOf(0, 500, 200, 500))
-            .setColor(
-                when {
-                    daysLeft < 0 -> 0xFFD32F2F.toInt()
-                    daysLeft <= 3 -> 0xFFFFA726.toInt()
-                    else -> 0xFF66BB6A.toInt()
-                }
-            )
-            .build()
-
-        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE)
-                as NotificationManager
-        notificationManager.notify(NOTIFICATION_ID, notification)
-    }
-
-    fun showMultipleExpiryNotification(
-        context: Context,
-        expiringProducts: List<String>,
+        products: List<String>,
         totalCount: Int
     ) {
-        val intent = Intent(context, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-        }
-
-        val pendingIntent = PendingIntent.getActivity(
-            context,
-            0,
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-
-        val productList = expiringProducts.take(3).joinToString("\n• ")
+        val shown = products.take(3)
+        val suffix = if (totalCount > 3) "\n• и ещё ${totalCount - 3}..." else ""
+        val productList = shown.joinToString("\n• ")
 
         val notification = NotificationCompat.Builder(context, NOTIFICATION_CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
-            .setContentTitle("⏰ $totalCount продуктов скоро испортятся!")
+            .setContentTitle(when (totalCount) {
+                1->"⚠️ $totalCount продукт истёк!"
+                in 2..4->"⚠️ $totalCount продукта истекло!"
+                else ->"⚠️ $totalCount продуктов истекло!"
+            })
+            .setContentText("Проверьте и выбросьте просроченное")
+            .setStyle(
+                NotificationCompat.BigTextStyle()
+                    .bigText("Истекли:\n• $productList$suffix")
+            )
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setContentIntent(makePendingIntent(context))
+            .setAutoCancel(true)
+            .setVibrate(longArrayOf(0, 500, 200, 500))
+            .setColor(0xFFD32F2F.toInt())
+            .build()
+
+        val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        nm.notify(NOTIFICATION_ID, notification)
+    }
+
+    fun showExpiringNotification(
+        context: Context,
+        products: List<String>,
+        totalCount: Int
+    ) {
+        val shown = products.take(3)
+        val suffix = if (totalCount > 3) "\n• и ещё ${totalCount - 3}..." else ""
+        val productList = shown.joinToString("\n• ")
+
+        val notification = NotificationCompat.Builder(context, NOTIFICATION_CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setContentTitle(when (totalCount) {
+                1->"⏰ $totalCount продукт скоро испортятся!"
+                in 2..4->"⏰ $totalCount продукта скоро испортятся!"
+                else ->"⏰ $totalCount продуктов скоро испортятся!"
+            })
             .setContentText("Проверьте список товаров")
             .setStyle(
                 NotificationCompat.BigTextStyle()
-                    .bigText("Подходящие к концу:\n• ${productList}")
+                    .bigText("Подходящие к концу:\n• $productList$suffix")
             )
             .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setContentIntent(pendingIntent)
+            .setContentIntent(makePendingIntent(context))
             .setAutoCancel(true)
             .setVibrate(longArrayOf(0, 500, 200, 500))
             .setColor(0xFFFFA726.toInt())
             .build()
 
-        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE)
-                as NotificationManager
-        notificationManager.notify(NOTIFICATION_ID + 1, notification)
+        val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        nm.notify(NOTIFICATION_ID + 1, notification)
+    }
+
+    private fun makePendingIntent(context: Context): PendingIntent {
+        val intent = Intent(context, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        }
+        return PendingIntent.getActivity(
+            context, 0, intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
     }
 }

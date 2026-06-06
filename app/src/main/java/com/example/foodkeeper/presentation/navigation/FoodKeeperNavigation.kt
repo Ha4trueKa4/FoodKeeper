@@ -1,11 +1,8 @@
 package com.example.foodkeeper.presentation.navigation
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -14,6 +11,7 @@ import com.example.foodkeeper.presentation.screens.AddEditProductScreen
 import com.example.foodkeeper.presentation.screens.AuthScreen
 import com.example.foodkeeper.presentation.screens.MainScreen
 import com.example.foodkeeper.presentation.screens.SettingsScreen
+import com.example.foodkeeper.presentation.navigation.Routes
 
 @Composable
 fun FoodKeeperNavigation(
@@ -46,7 +44,6 @@ fun FoodKeeperNavigation(
                 onSettings = {
                     navHostController.navigate(Routes.Settings)
                 }
-
             )
         }
 

@@ -25,8 +25,9 @@ class ExpiryCheckWorker(context: Context, params: WorkerParameters) :
     @RequiresApi(Build.VERSION_CODES.O)
     override suspend fun doWork(): Result {
         return try {
+            val notifyDays = inputData.getInt("notify_days", 3)
             val products = getProductsUseCase.execute().first()
-            checkAndNotify(products)
+            checkAndNotify(products, notifyDays)
             Result.success()
         } catch (e: Exception) {
             Result.failure()
@@ -34,34 +35,37 @@ class ExpiryCheckWorker(context: Context, params: WorkerParameters) :
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun checkAndNotify(products: List<Product>) {
+    private fun checkAndNotify(products: List<Product>, notifyDays: Int) {
         val today = LocalDate.now()
 
-        val expiring = products.mapNotNull { product ->
+        val expired = mutableListOf<Pair<String, Int>>()
+        val expiring = mutableListOf<Pair<String, Int>>()
+
+        products.forEach { product ->
             val expiryDate = Instant.ofEpochMilli(product.expiryDate)
                 .atZone(ZoneId.systemDefault())
                 .toLocalDate()
             val daysLeft = ChronoUnit.DAYS.between(today, expiryDate).toInt()
-            if (daysLeft <= 3) Pair(product.name, daysLeft) else null
+            when {
+                daysLeft < 0 -> expired.add(Pair(product.name, daysLeft))
+                daysLeft <= notifyDays -> expiring.add(Pair(product.name, daysLeft))
+            }
         }
 
-        when {
-            expiring.isEmpty() -> return
+        if (expired.isNotEmpty()) {
+            ExpiryNotificationManager.showExpiredNotification(
+                applicationContext,
+                expired.map { it.first },
+                expired.size
+            )
+        }
 
-            expiring.size == 1 -> {
-                val (name, daysLeft) = expiring.first()
-                ExpiryNotificationManager.showExpiryNotification(
-                    applicationContext, name, daysLeft
-                )
-            }
-
-            else -> {
-                ExpiryNotificationManager.showMultipleExpiryNotification(
-                    applicationContext,
-                    expiring.map { it.first },
-                    expiring.size
-                )
-            }
+        if (expiring.isNotEmpty()) {
+            ExpiryNotificationManager.showExpiringNotification(
+                applicationContext,
+                expiring.map { it.first },
+                expiring.size
+            )
         }
     }
 }

@@ -101,7 +101,7 @@ fun SettingsScreen(
             SettingsSectionHeader("Аккаунт")
 
             ListItem(
-                headlineContent = { Text("Email") },
+                headlineContent = { Text("Электронная почта") },
                 supportingContent = { Text(authViewModel.userEmail) },
                 leadingContent = {
                     Icon(Icons.Default.Person, contentDescription = null)

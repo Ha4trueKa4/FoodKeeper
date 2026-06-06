@@ -209,6 +209,8 @@ fun AuthScreen(
             TextButton(
                 onClick = { 
                     isLoginMode = !isLoginMode
+                    email = ""
+                    password = ""
                     emailError = ""
                     passwordError = ""
                     hasAttemptedSubmit = false
