@@ -8,6 +8,7 @@ import com.example.foodkeeper.domain.usecases.AddProductUseCase
 import com.example.foodkeeper.domain.usecases.DeleteProductUseCase
 import com.example.foodkeeper.domain.usecases.GetProductByIdUseCase
 import com.example.foodkeeper.domain.usecases.GetProductsUseCase
+import com.example.foodkeeper.domain.usecases.SyncUseCase
 import com.example.foodkeeper.domain.usecases.UpdateProductUseCase
 import com.example.foodkeeper.presentation.filters.ProductFilter
 import com.example.foodkeeper.presentation.filters.SortBy
@@ -28,8 +29,8 @@ class FoodKeeperViewModel(
     private val addProductsUseCase: AddProductUseCase,
     private val deleteProductUseCase: DeleteProductUseCase,
     private val getProductByIdUseCase: GetProductByIdUseCase,
-    private val updateProductUseCase: UpdateProductUseCase
-
+    private val updateProductUseCase: UpdateProductUseCase,
+    private val syncUseCase: SyncUseCase
 ) : ViewModel() {
 
     val isLoadingList = MutableStateFlow(true)
@@ -116,5 +117,18 @@ class FoodKeeperViewModel(
 
     suspend fun getProductById(firebaseId : String) : Product? {
         return getProductByIdUseCase.execute(firebaseId)
+    }
+
+    val isSyncing = MutableStateFlow(false)
+
+    fun syncNow() {
+        viewModelScope.launch {
+            isSyncing.value = true
+            try {
+                syncUseCase.execute()
+            } finally {
+                isSyncing.value = false
+            }
+        }
     }
 }

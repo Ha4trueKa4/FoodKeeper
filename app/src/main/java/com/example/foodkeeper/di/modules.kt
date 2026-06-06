@@ -13,6 +13,7 @@ import com.example.foodkeeper.domain.usecases.DeleteProductUseCase
 
 import com.example.foodkeeper.domain.usecases.GetProductByIdUseCase
 import com.example.foodkeeper.domain.usecases.GetProductsUseCase
+import com.example.foodkeeper.domain.usecases.SyncUseCase
 
 import com.example.foodkeeper.domain.usecases.UpdateProductUseCase
 import com.example.foodkeeper.presentation.viewmodel.AuthViewModel
@@ -28,6 +29,7 @@ import org.koin.dsl.module
 val viewModelModule = module {
     viewModel {
         FoodKeeperViewModel(
+            get(),
             get(),
             get(),
             get(),
@@ -78,6 +80,9 @@ val useCaseModule = module {
     }
     single {
         GetProductByIdUseCase(get())
+    }
+    single {
+        SyncUseCase(get())
     }
 }
 

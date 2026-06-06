@@ -2,12 +2,15 @@ package com.example.foodkeeper.presentation.screens
 
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -27,6 +30,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.foodkeeper.presentation.components.AddProductFloatingActionButton
@@ -55,6 +59,8 @@ fun MainScreen(
 
     var showFilterSheet by rememberSaveable { mutableStateOf(false) }
     val snackBarHostState = remember { SnackbarHostState() }
+
+    val isSyncing by viewModel.isSyncing.collectAsState()
 
     LaunchedEffect(pendingDeleteProduct) {
         pendingDeleteProduct?.let { product ->
@@ -85,6 +91,19 @@ fun MainScreen(
                     ) {
                         IconButton(onClick = { showFilterSheet = true }) {
                             Icon(Icons.Default.FilterList, contentDescription = "Фильтры")
+                        }
+                    }
+                    IconButton(
+                        onClick = { viewModel.syncNow() },
+                        enabled = !isSyncing
+                    ) {
+                        if (isSyncing) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Icon(Icons.Default.Sync, contentDescription = "Синхронизировать")
                         }
                     }
                     IconButton(onClick = { onSettings() }) {

@@ -127,7 +127,7 @@ fun ProductCard(
                         }
                     } else {
                         Image(
-                            painter = painterResource(id = R.drawable.milk),
+                            painter = painterResource(id = product.category.placeholder),
                             contentDescription = null,
                             modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.Crop

@@ -8,6 +8,9 @@ import com.example.foodkeeper.data.local.mapper.toEntity
 import com.example.foodkeeper.domain.Product
 import com.example.foodkeeper.domain.repository.ProductRepository
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.forEach
 import kotlinx.coroutines.flow.map
 import java.util.UUID
 
@@ -46,8 +49,17 @@ class ProductRepositoryImpl(
 
     suspend fun syncFromFirestore() {
         val remoteProducts = firestore.getAllProducts()
+        val remoteIds = remoteProducts.map { it.firebaseId }.toSet()
+
         remoteProducts.forEach {
             productDao.insertOrReplace(it.toEntity())
+        }
+
+        val localProducts = productDao.getAllProducts().first()
+        localProducts.forEach { local ->
+            if (local.firebaseId !in remoteIds) {
+                productDao.deleteProduct(local.firebaseId)
+            }
         }
     }
 
