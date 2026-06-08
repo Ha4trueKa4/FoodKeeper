@@ -1,7 +1,6 @@
 
 package com.example.foodkeeper.domain.repository
 
-import com.example.foodkeeper.data.local.entity.ProductEntity
 import com.example.foodkeeper.domain.Product
 import kotlinx.coroutines.flow.Flow
 

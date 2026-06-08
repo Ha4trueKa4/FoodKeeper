@@ -4,13 +4,12 @@ import android.app.Application
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.work.ExistingPeriodicWorkPolicy
-import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import coil3.ImageLoader
 import coil3.SingletonImageLoader
-import com.example.foodkeeper.data.local.SettingsRepository
-import com.example.foodkeeper.data.local.fb.ImageStorageDataSource
+import com.example.foodkeeper.data.repository.SettingsRepository
+import com.example.foodkeeper.data.remote.ImageStorageDataSource
 import com.example.foodkeeper.di.authModule
 import com.example.foodkeeper.di.firebaseModule
 import com.example.foodkeeper.di.firestoreModule
@@ -18,14 +17,13 @@ import com.example.foodkeeper.di.repositoryModule
 import com.example.foodkeeper.di.roomModule
 import com.example.foodkeeper.di.useCaseModule
 import com.example.foodkeeper.di.viewModelModule
-import com.example.foodkeeper.data.local.fb.SyncWorker
+import com.example.foodkeeper.data.remote.SyncWorker
 import com.example.foodkeeper.di.settingsModule
 import com.example.foodkeeper.presentation.notifications.ExpiryCheckWorker
 import com.example.foodkeeper.presentation.notifications.ExpiryNotificationManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import org.koin.android.ext.koin.androidContext
@@ -74,13 +72,6 @@ class App : Application() {
         }
 
         scheduleFirestoreSync()
-        /*
-        val testRequest = OneTimeWorkRequestBuilder<ExpiryCheckWorker>().setInputData(
-            androidx.work.Data.Builder()
-                .build()
-        ).build()
-        WorkManager.getInstance(this).enqueue(testRequest)
-        */
     }
 
     @RequiresApi(Build.VERSION_CODES.O)

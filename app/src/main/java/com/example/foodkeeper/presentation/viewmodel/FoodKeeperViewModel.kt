@@ -1,6 +1,5 @@
 package com.example.foodkeeper.presentation.viewmodel
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.foodkeeper.domain.Product
@@ -13,7 +12,6 @@ import com.example.foodkeeper.domain.usecases.UpdateProductUseCase
 import com.example.foodkeeper.presentation.filters.ProductFilter
 import com.example.foodkeeper.presentation.filters.SortBy
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -25,7 +23,7 @@ import kotlinx.coroutines.launch
 import java.util.Date
 
 class FoodKeeperViewModel(
-    private val getProductsUseCase: GetProductsUseCase,
+    getProductsUseCase: GetProductsUseCase,
     private val addProductsUseCase: AddProductUseCase,
     private val deleteProductUseCase: DeleteProductUseCase,
     private val getProductByIdUseCase: GetProductByIdUseCase,
@@ -100,12 +98,6 @@ class FoodKeeperViewModel(
     fun addProductAndAwait(product: Product): Job {
         return viewModelScope.launch {
             addProductsUseCase.execute(product)
-        }
-    }
-
-    fun deleteProduct(firebaseId : String) {
-        viewModelScope.launch {
-            deleteProductUseCase.execute(firebaseId)
         }
     }
 

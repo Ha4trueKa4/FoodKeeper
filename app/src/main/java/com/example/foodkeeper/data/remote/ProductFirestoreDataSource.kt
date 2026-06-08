@@ -1,8 +1,9 @@
-package com.example.foodkeeper.data.local.fb
+package com.example.foodkeeper.data.remote
 
 import com.example.foodkeeper.domain.Product
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Source
 import kotlinx.coroutines.tasks.await
 
 class ProductFirestoreDataSource(
@@ -57,7 +58,7 @@ class ProductFirestoreDataSource(
 
     suspend fun getAllProducts(): List<Product> {
         try {
-            val querySnapshot = getUserProductsCollection().get().await()
+            val querySnapshot = getUserProductsCollection().get(Source.SERVER).await()
             
             val products = querySnapshot.documents.mapNotNull { document ->
                 val product = document.toObject(Product::class.java)

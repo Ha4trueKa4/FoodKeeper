@@ -1,13 +1,9 @@
 package com.example.foodkeeper.presentation.navigation
 
-import android.app.Activity
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.ui.Modifier
-import androidx.lifecycle.Lifecycle
-import androidx.navigation.NavDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -20,9 +16,9 @@ import com.example.foodkeeper.presentation.viewmodel.FoodKeeperViewModel
 import com.google.firebase.auth.FirebaseAuth
 import org.koin.androidx.compose.koinViewModel
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun FoodKeeperNavigation(
-    modifier: Modifier = Modifier,
     navHostController: NavHostController
 ) {
     NavHost(

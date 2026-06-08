@@ -4,12 +4,12 @@ import android.content.Context
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -19,8 +19,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddAPhoto
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -35,28 +33,22 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
 import coil3.compose.AsyncImage
 import java.io.File
-import java.nio.file.Files
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import java.util.jar.Manifest
 
 
 @Composable
 fun ImagePickerButton(
     selectedImageUri: Uri?,
-    onImageSelected: (Uri) -> Unit,
-    modifier: Modifier = Modifier
+    onImageSelected: (Uri) -> Unit
 ) {
     val context = LocalContext.current
     var showDialog by remember { mutableStateOf(false) }
@@ -64,8 +56,8 @@ fun ImagePickerButton(
 
 
     val galleryLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) { uri : Uri? ->
+        contract = ActivityResultContracts.PickVisualMedia()
+    ) { uri: Uri? ->
         uri?.let { onImageSelected(it) }
     }
 
@@ -102,7 +94,9 @@ fun ImagePickerButton(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        galleryLauncher.launch("image/")
+                        galleryLauncher.launch(
+                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                        )
                         showDialog = false
                     }
                 ) {

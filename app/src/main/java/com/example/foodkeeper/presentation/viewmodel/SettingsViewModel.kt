@@ -5,9 +5,8 @@ import android.os.Build
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.foodkeeper.app.App
-import com.example.foodkeeper.data.local.SettingsRepository
+import com.example.foodkeeper.data.repository.SettingsRepository
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.WhileSubscribed
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -19,13 +18,13 @@ class SettingsViewModel(
     val theme = repository.theme.stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5000),
-        "light"
+        null
     )
 
     val notifyDays = repository.notifyDays.stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5000),
-        3
+        null
     )
 
     fun setTheme(value : String) = viewModelScope.launch { repository.setTheme(value) }

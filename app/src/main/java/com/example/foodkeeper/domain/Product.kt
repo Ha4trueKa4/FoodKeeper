@@ -11,7 +11,7 @@ data class Product(
     val category: Category = Category.OTHER,
     val quantity: Float = 1f,
     val unit: Units = Units.PCS,
-    val openedDate: Long? = null,
     val storageLocation: StorageLocation = StorageLocation.FRIDGE,
-    val notes: String = ""
+    val notes: String = "",
+    val isSynced: Boolean = false
 )

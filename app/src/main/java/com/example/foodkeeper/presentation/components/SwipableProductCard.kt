@@ -1,6 +1,7 @@
 package com.example.foodkeeper.presentation.components
 
-import android.util.Log
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -18,24 +19,17 @@ import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.foodkeeper.domain.Product
-import com.example.foodkeeper.presentation.navigation.Routes
-import com.example.foodkeeper.presentation.theme.Dimens
 
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun SwipeableProductCard(
     modifier: Modifier = Modifier,
@@ -61,7 +55,7 @@ fun SwipeableProductCard(
     val bgColor by animateColorAsState(
         targetValue = when (dismissState.targetValue) {
             SwipeToDismissBoxValue.EndToStart -> Color(0xFFD32F2F)
-            else -> Color(0xFFFFCDD2)
+            else -> Color.Red
         },
         label = "swipeBg"
     )
@@ -73,7 +67,7 @@ fun SwipeableProductCard(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = Dimens.PaddingLarge, vertical = Dimens.PaddingMedium)
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
                     .clip(RoundedCornerShape(20.dp))
                     .background(bgColor),
                 contentAlignment = Alignment.CenterEnd

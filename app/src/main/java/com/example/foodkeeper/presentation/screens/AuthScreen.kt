@@ -17,6 +17,7 @@ import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -32,14 +33,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Color.Companion.Transparent
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
-import com.example.foodkeeper.presentation.navigation.Routes
 import com.example.foodkeeper.presentation.utils.ValidationUtils
 import com.example.foodkeeper.presentation.viewmodel.AuthState
 import com.example.foodkeeper.presentation.viewmodel.AuthViewModel
@@ -58,6 +56,7 @@ fun AuthScreen(
 
     var emailError by remember { mutableStateOf("") }
     var passwordError by remember { mutableStateOf("") }
+    var firebaseError by remember { mutableStateOf("") }
     
     var isLoading by remember { mutableStateOf(false) }
     var hasAttemptedSubmit by remember { mutableStateOf(false) }
@@ -77,9 +76,11 @@ fun AuthScreen(
             }
             is AuthState.Error -> {
                 isLoading = false
+                firebaseError = (authState as AuthState.Error).message
             }
             is AuthState.Loading -> {
                 isLoading = true
+                firebaseError = ""
             }
             else -> {}
         }
@@ -105,6 +106,7 @@ fun AuthScreen(
                 value = email,
                 onValueChange = {
                     email = it
+                    firebaseError = ""
                     if (hasAttemptedSubmit) {
                         emailError = ValidationUtils.validateEmail(it)
                     }
@@ -121,12 +123,11 @@ fun AuthScreen(
                     .fillMaxWidth()
                     .padding(horizontal = 20.dp, vertical = 4.dp),
                 colors = TextFieldDefaults.colors(
-                    focusedIndicatorColor = if (emailError.isNotEmpty()) Color.Red else Color.Unspecified,
-                    unfocusedIndicatorColor = if (emailError.isNotEmpty()) Color.Red else Color.Unspecified,
-                    unfocusedContainerColor = Color.White,
-                    focusedContainerColor = Color.White,
-                    errorContainerColor = Color.White
-
+                    focusedIndicatorColor = if (emailError.isNotEmpty()) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+                    unfocusedIndicatorColor = if (emailError.isNotEmpty()) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.outline,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    errorContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh
                 ),
                 singleLine = true,
                 enabled = !isLoading,
@@ -139,8 +140,9 @@ fun AuthScreen(
                 value = password,
                 onValueChange = {
                     password = it
+                    firebaseError = ""
                     if (hasAttemptedSubmit) {
-                        passwordError = ValidationUtils.validatePassword(it)
+                        passwordError = ValidationUtils.validatePassword(it, isRegister = !isLoginMode)
                     }
                 },
                 label = {
@@ -165,11 +167,11 @@ fun AuthScreen(
                     .fillMaxWidth()
                     .padding(horizontal = 20.dp, vertical = 4.dp),
                 colors = TextFieldDefaults.colors(
-                    focusedIndicatorColor = if (passwordError.isNotEmpty()) Color.Red else Color.Unspecified,
-                    unfocusedIndicatorColor = if (passwordError.isNotEmpty()) Color.Red else Color.Unspecified,
-                    unfocusedContainerColor = Color.White,
-                    focusedContainerColor = Color.White,
-                    errorContainerColor = Color.White
+                    focusedIndicatorColor = if (emailError.isNotEmpty()) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+                    unfocusedIndicatorColor = if (emailError.isNotEmpty()) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.outline,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    errorContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh
                 ),
                 singleLine = true,
                 enabled = !isLoading,
@@ -185,7 +187,7 @@ fun AuthScreen(
                     onClick = {
                         hasAttemptedSubmit = true
                         emailError = ValidationUtils.validateEmail(email)
-                        passwordError = ValidationUtils.validatePassword(password)
+                        passwordError = ValidationUtils.validatePassword(password, isRegister = !isLoginMode)
                         
                         if (emailError.isEmpty() && passwordError.isEmpty()) {
                             if (isLoginMode) {
@@ -202,6 +204,17 @@ fun AuthScreen(
                 ) {
                     Text(if (isLoginMode) "Войти" else "Зарегистрироваться")
                 }
+
+            }
+
+            if (firebaseError.isNotEmpty()) {
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    text = firebaseError,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(horizontal = 20.dp)
+                )
             }
             
             Spacer(Modifier.height(16.dp))

@@ -1,9 +1,9 @@
-package com.example.foodkeeper.data.local.fb
+package com.example.foodkeeper.data.remote
 
 import android.content.Context
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import com.example.foodkeeper.data.local.ProductRepositoryImpl
+import com.example.foodkeeper.data.repository.ProductRepositoryImpl
 import com.google.firebase.auth.FirebaseAuth
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -23,7 +23,7 @@ class SyncWorker(
 
             repository.syncFromFirestore()
             Result.success()
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             Result.retry()
         }
     }

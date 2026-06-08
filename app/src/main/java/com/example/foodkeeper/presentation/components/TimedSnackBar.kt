@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Snackbar
@@ -38,7 +39,12 @@ fun TimedSnackbar(
     Snackbar(
         modifier = Modifier.padding(12.dp),
         action = {
-            TextButton(onClick = { snackbarData.performAction() }) {
+            TextButton(
+                onClick = { snackbarData.performAction() },
+                colors = ButtonDefaults.textButtonColors(
+                    contentColor = MaterialTheme.colorScheme.inversePrimary
+                )
+            ) {
                 Text(snackbarData.visuals.actionLabel ?: "")
             }
         }
@@ -56,7 +62,7 @@ fun TimedSnackbar(
                     trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
                 )
             }
-            Text(snackbarData.visuals.message, color = MaterialTheme.colorScheme.inversePrimary,)
+            Text(snackbarData.visuals.message, color = MaterialTheme.colorScheme.inversePrimary)
         }
     }
 }

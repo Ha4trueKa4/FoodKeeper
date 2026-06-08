@@ -1,12 +1,11 @@
 package com.example.foodkeeper.data.local.entity
 
 import androidx.room.Entity
-import androidx.room.PrimaryKey
 import androidx.room.Index
+import androidx.room.PrimaryKey
 import com.example.foodkeeper.domain.Category
 import com.example.foodkeeper.domain.StorageLocation
 import com.example.foodkeeper.domain.Units
-import java.util.UUID
 
 @Entity(
     tableName = "products",
@@ -22,7 +21,7 @@ data class ProductEntity(
     val category: String = Category.OTHER.name,
     val quantity: Float = 1f,
     val unit: String = Units.PCS.name,
-    val openedDate: Long? = null,
     val storageLocation: String = StorageLocation.FRIDGE.name,
-    val notes: String = ""
+    val notes: String = "",
+    val isSynced: Boolean = false
 )

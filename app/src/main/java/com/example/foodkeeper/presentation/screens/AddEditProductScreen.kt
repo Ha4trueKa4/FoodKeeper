@@ -17,9 +17,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Notes
 import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.LockOpen
-import androidx.compose.material.icons.filled.Notes
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -60,11 +57,12 @@ import java.util.Date
 import java.util.Locale
 import java.util.UUID
 import androidx.core.net.toUri
-import com.example.foodkeeper.data.local.fb.ImageStorageDataSource
+import com.example.foodkeeper.data.remote.ImageStorageDataSource
 import com.example.foodkeeper.domain.Category
 import com.example.foodkeeper.domain.StorageLocation
 import com.example.foodkeeper.domain.Units
 import com.example.foodkeeper.presentation.components.DropdownField
+import kotlinx.coroutines.withTimeoutOrNull
 import org.koin.compose.koinInject
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -85,7 +83,6 @@ fun AddEditProductScreen(
     var unit by rememberSaveable { mutableStateOf(Units.PCS) }
     var storageLocation by rememberSaveable { mutableStateOf(StorageLocation.FRIDGE) }
     var notes by rememberSaveable { mutableStateOf("") }
-    var openedDate by rememberSaveable { mutableStateOf<Long?>(null) }
 
     val imageStorage: ImageStorageDataSource = koinInject()
 
@@ -101,7 +98,6 @@ fun AddEditProductScreen(
                 unit = product.unit
                 storageLocation = product.storageLocation
                 notes = product.notes
-                openedDate = product.openedDate
             }
         }
     }
@@ -121,8 +117,10 @@ fun AddEditProductScreen(
             try {
                 val finalImageUrl = if (imageUri != null && !imageUri.toString().startsWith("https://")) {
                     try {
-                        imageStorage.uploadImage(imageUri!!)
-                    } catch (e: Exception) {
+                        withTimeoutOrNull(5000) { // 5 секунд максимум
+                            imageStorage.uploadImage(imageUri!!)
+                        } ?: imageUri?.toString() ?: "" // если таймаут — сохраняем локальный uri
+                    } catch (_: Exception) {
                         imageUri?.toString() ?: ""
                     }
                 } else {
@@ -130,7 +128,7 @@ fun AddEditProductScreen(
                 }
 
                 val product = Product(
-                    firebaseId = if (isEditMode) productId!! else UUID.randomUUID().toString(),
+                    firebaseId = if (isEditMode) productId else UUID.randomUUID().toString(),
                     name = trimmedName,
                     expiryDate = expiryDate!!,
                     imageUrl = finalImageUrl,
@@ -140,7 +138,6 @@ fun AddEditProductScreen(
                     unit = unit,
                     storageLocation = storageLocation,
                     notes = notes.trim(),
-                    openedDate = openedDate
                 )
 
                 if (isEditMode) viewModel.updateProduct(product)
@@ -286,44 +283,6 @@ fun AddEditProductScreen(
                     style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(start = 4.dp))
             }
 
-            // Дата вскрытия
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(Icons.Default.LockOpen, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                            Text("Дата вскрытия", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            Text(
-                                if (openedDate != null) formatDate(openedDate!!) else "Не вскрыт",
-                                style = MaterialTheme.typography.bodyLarge,
-                                fontWeight = FontWeight.Medium
-                            )
-                        }
-                    }
-                    Row {
-                        ExpiryDatePicker(selectedDateMillis = openedDate) { millis -> openedDate = millis }
-                        if (openedDate != null) {
-                            IconButton(onClick = { openedDate = null }) {
-                                Icon(Icons.Default.Close, contentDescription = "Сбросить")
-                            }
-                        }
-                    }
-                }
-            }
-
             // Заметка
             OutlinedTextField(
                 modifier = Modifier.fillMaxWidth(),
@@ -334,7 +293,7 @@ fun AddEditProductScreen(
                 minLines = 1,
                 maxLines = 4,
                 shape = RoundedCornerShape(12.dp),
-                leadingIcon = { Icon(Icons.Default.Notes, contentDescription = null) }
+                leadingIcon = { Icon(Icons.AutoMirrored.Filled.Notes, contentDescription = null) }
             )
 
             Spacer(Modifier.weight(1f))

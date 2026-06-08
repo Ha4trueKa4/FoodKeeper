@@ -30,4 +30,7 @@ interface ProductDao {
 
     @Query("DELETE FROM products")
     suspend fun clearAll()
+
+    @Query("UPDATE products SET isSynced = :isSynced WHERE firebaseId = :firebaseId")
+    suspend fun updateSyncStatus(firebaseId: String, isSynced: Boolean)
 }

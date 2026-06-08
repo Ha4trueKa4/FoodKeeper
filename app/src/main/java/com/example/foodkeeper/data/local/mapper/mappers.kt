@@ -17,9 +17,9 @@ fun ProductEntity.toDomain(): Product {
         category = Category.valueOf(category),
         quantity = quantity,
         unit = Units.valueOf(unit),
-        openedDate = openedDate,
         storageLocation = StorageLocation.valueOf(storageLocation),
-        notes = notes
+        notes = notes,
+        isSynced = isSynced
     )
 }
 
@@ -33,8 +33,8 @@ fun Product.toEntity(): ProductEntity {
         category = category.name,
         quantity = quantity,
         unit = unit.name,
-        openedDate = openedDate,
         storageLocation = storageLocation.name,
-        notes = notes
+        notes = notes,
+        isSynced = isSynced
     )
 }

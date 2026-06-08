@@ -2,15 +2,12 @@ package com.example.foodkeeper.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.foodkeeper.data.local.ProductRepositoryImpl
-import com.example.foodkeeper.data.local.SettingsRepository
+import com.example.foodkeeper.data.repository.ProductRepositoryImpl
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.FirebaseAuthWeakPasswordException
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withTimeoutOrNull
@@ -56,7 +53,7 @@ class AuthViewModel(
                 }
                 syncProductsFromFirebase()
                 _authState.value = AuthState.Authenticated
-            } catch (e: FirebaseAuthInvalidCredentialsException) {
+            } catch (_: FirebaseAuthInvalidCredentialsException) {
                 _authState.value = AuthState.Error("Неверная почта или пароль")
             } catch (e: Exception) {
                 _authState.value = AuthState.Error(e.message ?: "Ошибка входа")
@@ -70,11 +67,6 @@ class AuthViewModel(
             return
         }
 
-        if (password.length < 6) {
-            _authState.value = AuthState.Error("Пароль должен содержать минимум 6 символов")
-            return
-        }
-
         viewModelScope.launch {
             _authState.value = AuthState.Loading
             try {
@@ -83,9 +75,9 @@ class AuthViewModel(
                 }
                 syncProductsFromFirebase()
                 _authState.value = AuthState.Authenticated
-            } catch (e: FirebaseAuthWeakPasswordException) {
+            } catch (_: FirebaseAuthWeakPasswordException) {
                 _authState.value = AuthState.Error("Слабый пароль. Используй буквы, цифры и спецсимволы")
-            } catch (e: FirebaseAuthUserCollisionException) {
+            } catch (_: FirebaseAuthUserCollisionException) {
                 _authState.value = AuthState.Error("Этот email уже зарегистрирован")
             } catch (e: Exception) {
                 _authState.value = AuthState.Error(e.message ?: "Ошибка регистрации")
@@ -118,10 +110,5 @@ class AuthViewModel(
     }
 }
 
-sealed class AuthState {
-    object Authenticated : AuthState()
-    object Unauthenticated : AuthState()
-    object Loading : AuthState()
-    data class Error(val message: String) : AuthState()
-}
+
 

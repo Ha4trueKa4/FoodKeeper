@@ -43,7 +43,7 @@ object ExpiryNotificationManager {
         val productList = shown.joinToString("\n• ")
 
         val notification = NotificationCompat.Builder(context, NOTIFICATION_CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setSmallIcon(R.drawable.ic_stat_name)
             .setContentTitle(when (totalCount) {
                 1->"⚠️ $totalCount продукт истёк!"
                 in 2..4->"⚠️ $totalCount продукта истекло!"
@@ -75,7 +75,7 @@ object ExpiryNotificationManager {
         val productList = shown.joinToString("\n• ")
 
         val notification = NotificationCompat.Builder(context, NOTIFICATION_CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setSmallIcon(R.drawable.ic_stat_name)
             .setContentTitle(when (totalCount) {
                 1->"⏰ $totalCount продукт скоро испортятся!"
                 in 2..4->"⏰ $totalCount продукта скоро испортятся!"

@@ -1,4 +1,4 @@
-package com.example.foodkeeper.data.local.fb
+package com.example.foodkeeper.data.remote
 
 import android.content.Context
 import android.net.Uri
@@ -6,10 +6,11 @@ import com.cloudinary.android.MediaManager
 import com.cloudinary.android.callback.ErrorInfo
 import com.cloudinary.android.callback.UploadCallback
 import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlin.coroutines.resumeWithException
+import kotlin.collections.get
 import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 
-class ImageStorageDataSource(private val context: Context) {
+class ImageStorageDataSource() {
     companion object {
         private var initialized = false
 
@@ -34,9 +35,11 @@ class ImageStorageDataSource(private val context: Context) {
                     if (url != null) cont.resume(url)
                     else cont.resumeWithException(Exception("No URL in response"))
                 }
+
                 override fun onError(requestId: String, error: ErrorInfo) {
                     cont.resumeWithException(Exception(error.description))
                 }
+
                 override fun onReschedule(requestId: String, error: ErrorInfo) {
                     cont.resumeWithException(Exception(error.description))
                 }
