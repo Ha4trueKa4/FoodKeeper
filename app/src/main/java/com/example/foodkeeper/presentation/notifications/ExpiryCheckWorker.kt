@@ -2,72 +2,72 @@ package com.example.foodkeeper.presentation.notifications
 
 import android.content.Context
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.example.foodkeeper.domain.Product
 import com.example.foodkeeper.domain.usecases.GetProductsUseCase
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import java.time.Instant
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.time.temporal.ChronoUnit
 
 class ExpiryCheckWorker(context: Context, params: WorkerParameters) :
     CoroutineWorker(context, params), KoinComponent {
 
     private val getProductsUseCase: GetProductsUseCase by inject()
-    private val notificationManager = ExpiryNotificationManager
 
     @RequiresApi(Build.VERSION_CODES.O)
     override suspend fun doWork(): Result {
         return try {
+            val notifyDays = inputData.getInt("notify_days", 3)
 
-            getProductsUseCase.execute().collect { products ->
-                if (!products.isEmpty()) {
-                    checkAndNotifyExpiringProducts(products)
-                }
-            }
-            Result.retry()
-        } catch (e: Exception) {
-            Result.retry()
+            val products = getProductsUseCase.execute().first()
+
+            checkAndNotify(products, notifyDays)
+
+            Result.success()
+        } catch (_: Exception) {
+            Result.failure()
         }
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun checkAndNotifyExpiringProducts(products: List<Product>) {
-        val today = LocalDate.now()
+    private suspend fun checkAndNotify(products: List<Product>, notifyDays: Int) {
 
-        val expiringProducts = mutableListOf<String>()
+        val expired = mutableListOf<Pair<String, Int>>()
+        val expiring = mutableListOf<Pair<String, Int>>()
 
         products.forEach { product ->
-
-            val expiryDateLocal = Instant
-                .ofEpochMilli(product.expiryDate)
-                .atZone(ZoneId.systemDefault())
-                .toLocalDate()
-
-            val daysLeft = ChronoUnit.DAYS.between(today, expiryDateLocal).toInt()
-
-            if (daysLeft <= 3) {
-                notificationManager.showExpiryNotification(
-                    applicationContext,
-                    productName = product.name,
-                    daysLeft = daysLeft
-                )
-                expiringProducts.add(product.name)
+            val now = System.currentTimeMillis()
+            val daysLeft = ((product.expiryDate - now) / (1000 * 60 * 60 * 24)).toInt()
+            Log.d("Worker", "Product: ${product.name}, daysLeft: $daysLeft")
+            Log.d("Worker", "notifyDays: $notifyDays, daysLeft: $daysLeft")
+            when {
+                daysLeft < 0 -> expired.add(Pair(product.name, daysLeft))
+                daysLeft <= notifyDays -> expiring.add(Pair(product.name, daysLeft))
             }
         }
+        Log.d("Worker", "expired: ${expired.size}, expiring: ${expiring.size}")
 
-        if (expiringProducts.size > 1) {
-            notificationManager.showMultipleExpiryNotification(
+        if (expiring.isNotEmpty()) {
+            ExpiryNotificationManager.showExpiringNotification(
                 applicationContext,
-                expiringProducts,
-                expiringProducts.size
+                expiring.map { it.first },
+                expiring.size
             )
         }
+
+        if (expired.isNotEmpty()) {
+            delay(5000)
+            ExpiryNotificationManager.showExpiredNotification(
+                applicationContext,
+                expired.map { it.first },
+                expired.size
+            )
+        }
+
+
     }
 }

@@ -3,19 +3,22 @@ package com.example.foodkeeper.di
 
 import androidx.room.Room
 import com.example.foodkeeper.data.local.FoodKeeperDatabase
-import com.example.foodkeeper.data.local.ProductRepositoryImpl
-import com.example.foodkeeper.data.local.fb.ProductFirestoreDataSource
+import com.example.foodkeeper.data.remote.ImageStorageDataSource
+import com.example.foodkeeper.data.remote.ProductFirestoreDataSource
+import com.example.foodkeeper.data.repository.ProductRepositoryImpl
+import com.example.foodkeeper.data.repository.SettingsRepository
 import com.example.foodkeeper.domain.repository.ProductRepository
 import com.example.foodkeeper.domain.usecases.AddProductUseCase
 import com.example.foodkeeper.domain.usecases.DeleteProductUseCase
-
 import com.example.foodkeeper.domain.usecases.GetProductByIdUseCase
 import com.example.foodkeeper.domain.usecases.GetProductsUseCase
-
+import com.example.foodkeeper.domain.usecases.SyncUseCase
 import com.example.foodkeeper.domain.usecases.UpdateProductUseCase
 import com.example.foodkeeper.presentation.viewmodel.AuthViewModel
 import com.example.foodkeeper.presentation.viewmodel.FoodKeeperViewModel
+import com.example.foodkeeper.presentation.viewmodel.SettingsViewModel
 import com.google.firebase.auth.FirebaseAuth
+import org.koin.android.ext.koin.androidApplication
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 
@@ -23,6 +26,7 @@ import org.koin.dsl.module
 val viewModelModule = module {
     viewModel {
         FoodKeeperViewModel(
+            get(),
             get(),
             get(),
             get(),
@@ -48,8 +52,9 @@ val repositoryModule = module {
 
     single<ProductRepositoryImpl> {
         ProductRepositoryImpl(
-            get(), // ProductDao
-            get()  // ProductFirestoreDataSource
+            get(),
+            get(),
+            get()
         )
     }
     
@@ -74,6 +79,9 @@ val useCaseModule = module {
     single {
         GetProductByIdUseCase(get())
     }
+    single {
+        SyncUseCase(get())
+    }
 }
 
 val authModule = module {
@@ -89,13 +97,16 @@ val firebaseModule = module {
     }
 
     single {
-        com.google.firebase.auth.FirebaseAuth.getInstance()
+        FirebaseAuth.getInstance()
     }
 }
 
 val firestoreModule = module {
+    single { ProductFirestoreDataSource(get()) }
+    single { ImageStorageDataSource() }
+}
 
-    single {
-        ProductFirestoreDataSource(get())
-    }
+val settingsModule = module {
+    single { SettingsRepository(get()) }
+    viewModel { SettingsViewModel(get(), androidApplication()) }
 }

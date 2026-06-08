@@ -2,7 +2,7 @@ package com.example.foodkeeper.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.foodkeeper.data.local.ProductRepositoryImpl
+import com.example.foodkeeper.data.repository.ProductRepositoryImpl
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
@@ -15,15 +15,20 @@ import kotlin.time.Duration.Companion.seconds
 
 class AuthViewModel(
     private val auth: FirebaseAuth,
-    private val repository: ProductRepositoryImpl
+    private val repository: ProductRepositoryImpl,
 ) : ViewModel() {
 
-    private val _authState = MutableStateFlow<AuthState>(AuthState.Unauthenticated)
+
+
+    private val _authState = MutableStateFlow<AuthState>(AuthState.Loading)
     val authState = _authState
 
     init {
         checkAuthStatus()
     }
+
+    val userEmail: String
+        get() = auth.currentUser?.email ?: ""
 
     fun checkAuthStatus() {
         if (auth.currentUser == null) {
@@ -48,7 +53,7 @@ class AuthViewModel(
                 }
                 syncProductsFromFirebase()
                 _authState.value = AuthState.Authenticated
-            } catch (e: FirebaseAuthInvalidCredentialsException) {
+            } catch (_: FirebaseAuthInvalidCredentialsException) {
                 _authState.value = AuthState.Error("Неверная почта или пароль")
             } catch (e: Exception) {
                 _authState.value = AuthState.Error(e.message ?: "Ошибка входа")
@@ -62,11 +67,6 @@ class AuthViewModel(
             return
         }
 
-        if (password.length < 6) {
-            _authState.value = AuthState.Error("Пароль должен содержать минимум 6 символов")
-            return
-        }
-
         viewModelScope.launch {
             _authState.value = AuthState.Loading
             try {
@@ -75,9 +75,9 @@ class AuthViewModel(
                 }
                 syncProductsFromFirebase()
                 _authState.value = AuthState.Authenticated
-            } catch (e: FirebaseAuthWeakPasswordException) {
+            } catch (_: FirebaseAuthWeakPasswordException) {
                 _authState.value = AuthState.Error("Слабый пароль. Используй буквы, цифры и спецсимволы")
-            } catch (e: FirebaseAuthUserCollisionException) {
+            } catch (_: FirebaseAuthUserCollisionException) {
                 _authState.value = AuthState.Error("Этот email уже зарегистрирован")
             } catch (e: Exception) {
                 _authState.value = AuthState.Error(e.message ?: "Ошибка регистрации")
@@ -87,33 +87,20 @@ class AuthViewModel(
 
     fun signOut() {
         viewModelScope.launch {
-            try {
-                clearAllProducts()
-                auth.signOut()
-                _authState.value = AuthState.Unauthenticated
-            } catch (e: Exception) {
-                auth.signOut()
-                _authState.value = AuthState.Unauthenticated
-            }
+            clearAllProducts()
+            auth.signOut()
+            _authState.value = AuthState.Unauthenticated
         }
     }
 
     private fun syncProductsFromFirebase() {
         viewModelScope.launch {
-            try {
-                repository.syncFromFirestore()
-            } catch (e: Exception) {
-                // Sync failed, will retry through SyncWorker
-            }
+            repository.syncFromFirestore()
         }
     }
 
     private suspend fun clearAllProducts() {
-        try {
-            repository.clearAllProducts()
-        } catch (e: Exception) {
-            // Ignore
-        }
+        repository.clearAllProducts()
     }
 
     private fun validateInput(email: String, password: String): Boolean {
@@ -123,10 +110,5 @@ class AuthViewModel(
     }
 }
 
-sealed class AuthState {
-    object Authenticated : AuthState()
-    object Unauthenticated : AuthState()
-    object Loading : AuthState()
-    data class Error(val message: String) : AuthState()
-}
+
 

@@ -1,9 +1,16 @@
 package com.example.foodkeeper.presentation.screens
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Logout
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
@@ -17,55 +24,57 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.navigation.NavController
-import androidx.navigation.compose.currentBackStackEntryAsState
-import com.example.foodkeeper.presentation.components.AddProductFloatingActionButton
 import com.example.foodkeeper.presentation.components.ProductList
-import com.example.foodkeeper.presentation.navigation.Routes
-import com.example.foodkeeper.presentation.viewmodel.AuthViewModel
+import com.example.foodkeeper.presentation.components.TimedSnackbar
+import com.example.foodkeeper.presentation.filters.FilterBottomSheet
 import com.example.foodkeeper.presentation.viewmodel.FoodKeeperViewModel
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
-    modifier: Modifier = Modifier,
     viewModel: FoodKeeperViewModel = koinViewModel(),
-    authViewModel: AuthViewModel = koinViewModel(),
-    onEdit : (Int) -> Unit,
+    onEdit : (String) -> Unit,
     onAdd : () -> Unit,
-    onLogout: () -> Unit = {}
+    onSettings : () -> Unit
 ) {
     val products by viewModel.products.collectAsState()
     val pendingDeleteProduct by viewModel.pendingDeleteProduct.collectAsState()
-
     val isLoadingList by viewModel.isLoadingList.collectAsState()
+    val filter by viewModel.filter.collectAsState()
 
+    var showFilterSheet by rememberSaveable { mutableStateOf(false) }
     val snackBarHostState = remember { SnackbarHostState() }
 
-    val visibleProducts = products
+    val isSyncing by viewModel.isSyncing.collectAsState()
 
     LaunchedEffect(pendingDeleteProduct) {
         pendingDeleteProduct?.let { product ->
             snackBarHostState.currentSnackbarData?.dismiss()
-            val job = launch {
-                val result = snackBarHostState.showSnackbar(
-                    message = "${product.name} будет удалён",
-                    actionLabel = "Отменить",
-                    duration = SnackbarDuration.Indefinite,
-                    withDismissAction = false
-                )
-                if (result == SnackbarResult.ActionPerformed) {
-                    viewModel.cancelDelete()
-                }
-            }
-            delay(3000)
+            val result = snackBarHostState.showSnackbar(
+                message = "${product.name} будет удалён",
+                actionLabel = "Отменить",
+                duration = SnackbarDuration.Indefinite,
 
-            job.cancel()
+            )
+            if (result == SnackbarResult.ActionPerformed) {
+                viewModel.cancelDelete()
+            } else {
+                viewModel.confirmDelete()
+            }
+        }
+    }
+
+    LaunchedEffect(pendingDeleteProduct) {
+        if (pendingDeleteProduct != null) {
+            delay(5000)
             snackBarHostState.currentSnackbarData?.dismiss()
             viewModel.confirmDelete()
         }
@@ -76,38 +85,53 @@ fun MainScreen(
             TopAppBar(
                 title = { Text("FoodKeeper") },
                 actions = {
-                    IconButton(onClick = {
-                        authViewModel.signOut()
-                        onLogout()
-                    }) {
-                        Icon(Icons.Default.Logout, contentDescription = "Выйти из аккаунта")
+                    BadgedBox(
+                        badge = {
+                            if (filter.isActive) Badge()
+                        }
+                    ) {
+                        IconButton(onClick = { showFilterSheet = true }) {
+                            Icon(Icons.Default.FilterList, contentDescription = "Фильтры")
+                        }
+                    }
+                    IconButton(onClick = { onSettings() }) {
+                        Icon(Icons.Default.Settings, contentDescription = "Настройки")
                     }
                 }
             )
         },
-        snackbarHost = {
-            SnackbarHost(hostState = snackBarHostState)
-        },
+        snackbarHost = {SnackbarHost(hostState = snackBarHostState) { data ->
+            TimedSnackbar(snackbarData = data)
+        }},
         floatingActionButton = {
-            AddProductFloatingActionButton {
-                onAdd()
+            FloatingActionButton(
+                onClick = onAdd
+            ) {
+                Icon(Icons.Default.Add, contentDescription = null)
             }
         }
     ) { innerPadding ->
         ProductList(
             modifier = Modifier.padding(innerPadding),
-            products = visibleProducts,
+            products = products,
             isLoading = isLoadingList,
-            onDelete = { productId ->
-                val productToDelete = products.find { it.id == productId }
-                productToDelete?.let {
-                    viewModel.requestDelete(it)
-                }
+            isRefreshing = isSyncing,
+            onRefresh = { viewModel.syncNow() },
+            onDelete = { firebaseId ->
+                val productToDelete = products.find { it.firebaseId == firebaseId }
+                productToDelete?.let { viewModel.requestDelete(it) }
             },
-            onEdit = { productId->
-                onEdit(productId)
-            },
-            pendingDeleteProductId = pendingDeleteProduct?.id
+            onEdit = { firebaseId -> onEdit(firebaseId) },
+            pendingDeleteProductId = pendingDeleteProduct?.firebaseId
+        )
+    }
+
+    if (showFilterSheet) {
+        FilterBottomSheet(
+            filter = filter,
+            onFilterChange = { viewModel.setFilter(it) },
+            onReset = { viewModel.resetFilter() },
+            onDismiss = { showFilterSheet = false }
         )
     }
 }

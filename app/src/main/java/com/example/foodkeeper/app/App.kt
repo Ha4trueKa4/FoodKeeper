@@ -1,9 +1,15 @@
 package com.example.foodkeeper.app
 
 import android.app.Application
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
+import coil3.ImageLoader
+import coil3.SingletonImageLoader
+import com.example.foodkeeper.data.repository.SettingsRepository
+import com.example.foodkeeper.data.remote.ImageStorageDataSource
 import com.example.foodkeeper.di.authModule
 import com.example.foodkeeper.di.firebaseModule
 import com.example.foodkeeper.di.firestoreModule
@@ -11,18 +17,30 @@ import com.example.foodkeeper.di.repositoryModule
 import com.example.foodkeeper.di.roomModule
 import com.example.foodkeeper.di.useCaseModule
 import com.example.foodkeeper.di.viewModelModule
-import com.example.foodkeeper.data.local.fb.SyncWorker
+import com.example.foodkeeper.data.remote.SyncWorker
+import com.example.foodkeeper.di.settingsModule
 import com.example.foodkeeper.presentation.notifications.ExpiryCheckWorker
 import com.example.foodkeeper.presentation.notifications.ExpiryNotificationManager
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.GlobalContext.startKoin
+import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 import java.util.concurrent.TimeUnit
 
 
 class App : Application() {
+
+    private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate() {
         super.onCreate()
-        
+
         startKoin {
             androidContext(this@App)
             modules(listOf(
@@ -32,27 +50,58 @@ class App : Application() {
                 useCaseModule,
                 authModule,
                 firebaseModule,
-                firestoreModule
+                firestoreModule,
+                settingsModule
             ))
         }
 
+        val imageLoader = ImageLoader.Builder(this)
+            .components {
+                add(coil3.network.okhttp.OkHttpNetworkFetcherFactory())
+            }
+            .build()
+        SingletonImageLoader.setSafe { imageLoader }
+
+        ImageStorageDataSource.init(this)
+
         ExpiryNotificationManager.createNotificationChannel(this)
 
-        scheduleExpiryCheck()
+        appScope.launch {
+            val notifyDays = SettingsRepository(this@App).notifyDays.first()
+            scheduleExpiryCheck(notifyDays)
+        }
+
         scheduleFirestoreSync()
     }
 
-    private fun scheduleExpiryCheck() {
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun scheduleExpiryCheck(notifyDays : Int) {
+
+        val data = androidx.work.Data.Builder()
+            .putInt("notify_days", notifyDays)
+            .build()
+
         val expiryCheckRequest = PeriodicWorkRequestBuilder<ExpiryCheckWorker>(
-            repeatInterval = 15,
-            repeatIntervalTimeUnit = TimeUnit.MINUTES
-        ).build()
+            repeatInterval = 24,
+            repeatIntervalTimeUnit = TimeUnit.HOURS
+        )
+            .setInitialDelay(calculateDelayUntil8am(), TimeUnit.MILLISECONDS)
+            .setInputData(data)
+            .build()
 
         WorkManager.getInstance(this).enqueueUniquePeriodicWork(
-            "expiery_check",
-            ExistingPeriodicWorkPolicy.REPLACE,
+            "expiry_check",
+            ExistingPeriodicWorkPolicy.UPDATE,
             expiryCheckRequest
         )
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun calculateDelayUntil8am(): Long {
+        val now = LocalDateTime.now()
+        var target = now.withHour(8).withMinute(0).withSecond(0)
+        if (now.isAfter(target)) target = target.plusDays(1)
+        return ChronoUnit.MILLIS.between(now, target)
     }
 
     private fun scheduleFirestoreSync() {

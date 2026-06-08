@@ -1,20 +1,27 @@
 package com.example.foodkeeper.data.local.entity
 
 import androidx.room.Entity
-import androidx.room.PrimaryKey
 import androidx.room.Index
-import java.util.UUID
+import androidx.room.PrimaryKey
+import com.example.foodkeeper.domain.Category
+import com.example.foodkeeper.domain.StorageLocation
+import com.example.foodkeeper.domain.Units
 
 @Entity(
     tableName = "products",
-    indices = [Index(value = ["firebaseId"], unique = true)]  // ← UNIQUE constraint
+    indices = [Index(value = ["firebaseId"], unique = true)]
 )
 data class ProductEntity(
-    @PrimaryKey(autoGenerate = true)
-    val id: Int = 0,
+    @PrimaryKey
+    val firebaseId: String,
     val name: String,
-    val expiryDate : Long,
+    val expiryDate: Long,
     val imageUrl: String,
     val userId: String = "",
-    val firebaseId: String = UUID.randomUUID().toString()
+    val category: String = Category.OTHER.name,
+    val quantity: Float = 1f,
+    val unit: String = Units.PCS.name,
+    val storageLocation: String = StorageLocation.FRIDGE.name,
+    val notes: String = "",
+    val isSynced: Boolean = false
 )

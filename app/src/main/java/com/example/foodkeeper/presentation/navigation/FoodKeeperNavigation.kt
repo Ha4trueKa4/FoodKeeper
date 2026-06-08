@@ -1,11 +1,9 @@
 package com.example.foodkeeper.presentation.navigation
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.ui.Modifier
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.runtime.LaunchedEffect
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -13,52 +11,43 @@ import androidx.navigation.toRoute
 import com.example.foodkeeper.presentation.screens.AddEditProductScreen
 import com.example.foodkeeper.presentation.screens.AuthScreen
 import com.example.foodkeeper.presentation.screens.MainScreen
+import com.example.foodkeeper.presentation.screens.SettingsScreen
+import com.example.foodkeeper.presentation.viewmodel.FoodKeeperViewModel
+import com.google.firebase.auth.FirebaseAuth
+import org.koin.androidx.compose.koinViewModel
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun FoodKeeperNavigation(
-    modifier: Modifier = Modifier,
     navHostController: NavHostController
 ) {
     NavHost(
         navController = navHostController,
-        startDestination = Routes.Auth
+        startDestination = if (FirebaseAuth.getInstance().currentUser != null) Routes.Main else Routes.Auth
     ) {
-
         composable<Routes.Add> {
-            AddEditProductScreen(
-                productId = null
-            ) {
-                val navBackStackEntry = navHostController.currentBackStackEntry
-                if (navBackStackEntry?.lifecycle?.currentState == Lifecycle.State.RESUMED) {
-                    navHostController.popBackStack()
-                }
+            AddEditProductScreen(productId = null) {
+                navHostController.popBackStack()
             }
         }
+
         composable<Routes.Main> {
+            val viewModel: FoodKeeperViewModel = koinViewModel()
+
+            LaunchedEffect(Unit) {
+                viewModel.syncNow()
+            }
             MainScreen(
-                onAdd = {
-                    navHostController.navigate(Routes.Add)
-                },
-                onEdit = { productId ->
-                    navHostController.navigate(Routes.Edit(productId))
-                },
-                onLogout = {
-                    navHostController.navigate(Routes.Auth) {
-                        popUpTo(0) { inclusive = true }
-                    }
-                }
+                onAdd = { navHostController.navigate(Routes.Add) },
+                onEdit = { firebaseId -> navHostController.navigate(Routes.Edit(firebaseId)) },
+                onSettings = { navHostController.navigate(Routes.Settings) }
             )
         }
 
         composable<Routes.Edit> { backStackEntry ->
             val route = backStackEntry.toRoute<Routes.Edit>()
-            AddEditProductScreen(
-                productId = route.productId
-            ) {
-                val navBackStackEntry = navHostController.currentBackStackEntry
-                if (navBackStackEntry?.lifecycle?.currentState == Lifecycle.State.RESUMED) {
-                    navHostController.popBackStack()
-                }
+            AddEditProductScreen(productId = route.firebaseId) {
+                navHostController.popBackStack()
             }
         }
 
@@ -69,6 +58,17 @@ fun FoodKeeperNavigation(
                     launchSingleTop = true
                 }
             }
+        }
+
+        composable<Routes.Settings> {
+            SettingsScreen(
+                onBack = { navHostController.popBackStack() },
+                onLogout = {
+                    navHostController.navigate(Routes.Auth) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
+            )
         }
     }
 }

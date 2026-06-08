@@ -1,0 +1,123 @@
+package com.example.foodkeeper.presentation.filters
+
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import com.example.foodkeeper.domain.Category
+import com.example.foodkeeper.domain.StorageLocation
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun FilterBottomSheet(
+    filter: ProductFilter,
+    onFilterChange: (ProductFilter) -> Unit,
+    onReset: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    ModalBottomSheet(onDismissRequest = onDismiss) {
+        Column(
+            modifier = Modifier
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 16.dp)
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text("Фильтры", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+
+            // Категория
+            FilterSectionHeader("Категория")
+            SingleChoiceChipRow(
+                options = listOf(null) + Category.entries,
+                selected = filter.category,
+                label = { it?.let { "${it.emoji} ${it.displayName}" } ?: "Все" },
+                onSelect = { onFilterChange(filter.copy(category = it)) }
+            )
+
+            // Место хранения
+            FilterSectionHeader("Место хранения")
+            SingleChoiceChipRow(
+                options = listOf(null) + StorageLocation.entries,
+                selected = filter.storageLocation,
+                label = { it?.let { "${it.emoji} ${it.displayName}" } ?: "Все" },
+                onSelect = { onFilterChange(filter.copy(storageLocation = it)) }
+            )
+
+            // Сортировка
+            FilterSectionHeader("Сортировка")
+            SingleChoiceChipRow(
+                options = SortBy.entries,
+                selected = filter.sortBy,
+                label = { it.displayName },
+                onSelect = { onFilterChange(filter.copy(sortBy = it)) }
+            )
+
+            // Показывать истёкшие
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("Показывать истёкшие", style = MaterialTheme.typography.bodyMedium)
+                Switch(
+                    checked = filter.showExpired,
+                    onCheckedChange = { onFilterChange(filter.copy(showExpired = it)) }
+                )
+            }
+            OutlinedButton(
+                onClick = { onReset() },
+                modifier = Modifier.fillMaxWidth(),
+                enabled = filter.isActive
+            ) {
+                Text("Сбросить фильтры")
+            }
+        }
+    }
+}
+
+@Composable
+private fun FilterSectionHeader(title: String) {
+    Text(
+        text = title,
+        style = MaterialTheme.typography.labelLarge,
+        fontWeight = FontWeight.SemiBold,
+        color = MaterialTheme.colorScheme.primary
+    )
+}
+
+@Composable
+private fun <T> SingleChoiceChipRow(
+    options: List<T>,
+    selected: T,
+    label: (T) -> String,
+    onSelect: (T) -> Unit
+) {
+    Row(
+        modifier = Modifier.horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        options.forEach { option ->
+            FilterChip(
+                selected = selected == option,
+                onClick = { onSelect(option) },
+                label = { Text(label(option)) }
+            )
+        }
+    }
+}

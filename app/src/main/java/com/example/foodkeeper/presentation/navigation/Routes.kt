@@ -13,5 +13,8 @@ sealed class Routes {
     data object Add : Routes()
 
     @Serializable
-    data class Edit(val productId: Int) : Routes()
+    data class Edit(val firebaseId: String) : Routes()
+
+    @Serializable
+    data object Settings : Routes()
 }

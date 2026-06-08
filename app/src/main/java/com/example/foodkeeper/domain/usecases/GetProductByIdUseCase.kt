@@ -6,7 +6,7 @@ import com.example.foodkeeper.domain.repository.ProductRepository
 class GetProductByIdUseCase(
     private val repository: ProductRepository
 ) {
-    suspend fun execute(productId: Int): Product? {
-        return repository.getProductById(productId)
+    suspend fun execute(firebaseId: String): Product? {
+        return repository.getProductById(firebaseId)
     }
 }
